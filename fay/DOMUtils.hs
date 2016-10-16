@@ -12,6 +12,7 @@ module DOMUtils
     setDisplay,
     addEventListener,
     clearEventListeners,
+    getEventTargetAttr,
     Modal,
     getModal,
     showModal,
@@ -56,6 +57,17 @@ clearEventListeners = ffi "(function(elem) {\
                           \  var elem_ = elem.cloneNode(true);\
                           \  elem.parentNode.replaceChild(elem_, elem);\
                           \})(%1)"
+
+getEventTargetAttr :: Text -> Event -> Fay Text
+getEventTargetAttr = ffi "(function(txt, evt) {\
+                    \  var elem = evt.target;\
+                    \  var attr = elem.getAttribute(txt);\
+                    \  if (attr) {\
+                    \    return attr;\
+                    \  } else {\
+                    \    return '';\
+                    \  }\
+                    \})(%1, %2)"
 
 data Modal
 

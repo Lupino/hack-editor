@@ -257,17 +257,6 @@ getModalName = getEventTargetAttr "data-modal"
 getProcFile :: Event -> Fay Text
 getProcFile = getEventTargetAttr "data-proc"
 
-getEventTargetAttr :: Text -> Event -> Fay Text
-getEventTargetAttr = ffi "(function(txt, evt) {\
-                    \  var elem = evt.target;\
-                    \  var attr = elem.getAttribute(txt);\
-                    \  if (attr) {\
-                    \    return attr;\
-                    \  } else {\
-                    \    return '';\
-                    \  }\
-                    \})(%1, %2)"
-
 bindStartProc :: Event -> Fay ()
 bindStartProc ev = do
   cmds <- getProcTarget ev
