@@ -50,17 +50,17 @@ stopProc :: [Text] -> (Either Text Text -> Fay ()) -> Fay ()
 stopProc cmds act = angelProc (difference cmds) act
 
 angelProc :: ([Text] -> [Text]) -> (Either Text Text -> Fay ()) -> Fay ()
-angelProc dealCmd act = readFile "/system/running.json" readFileAction
+angelProc dealCmd act = readFile "/conf/deploy.json" readFileAction
   where readFileAction :: Either Text Text -> Fay ()
         readFileAction err@(Left _) = act err
         readFileAction (Right txt)  =  concatFileAndSave txt toReloadAngelAction
 
         concatFileAndSave :: Text -> (Either Text Text -> Fay ()) -> Fay ()
-        concatFileAndSave txt act' = concatFile cmds "/system/running.conf" toSaveFile
+        concatFileAndSave txt act' = concatFile cmds "/conf/deploy.conf" toSaveFile
           where cmds = dealCmd $ readList txt
                 toSaveFile :: Either Text Text -> Fay ()
                 toSaveFile err@(Left _) = act' err
-                toSaveFile (Right _)    = saveFile "/system/running.json" (showList cmds) act'
+                toSaveFile (Right _)    = saveFile "/conf/deploy.json" (showList cmds) act'
 
         toReloadAngelAction :: Either Text Text -> Fay ()
         toReloadAngelAction err@(Left _) = act err

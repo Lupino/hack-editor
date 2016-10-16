@@ -304,7 +304,7 @@ readConfig :: Text -> Config
 readConfig = ffi "JSON.parse(%1)"
 
 loadConfig :: (Config -> Fay ()) -> Fay ()
-loadConfig done = readFile "/system/config.json" act
+loadConfig done = readFile "/conf/config.json" act
   where act :: Either Text Text -> Fay ()
         act (Left _) = done emptyConfig
         act (Right txt) = done $ readConfig txt

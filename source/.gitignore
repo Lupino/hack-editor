@@ -5,6 +5,8 @@ logs/*
 !logs/.keep
 run/*
 !run/.keep
+conf/*
+!conf/.keep
 proc/*
 !proc/.keep
 system/config.json
