@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title> Proc Editor </title>
+
+  <script type="text/javascript" src="/jquery-2.1.0.min.js"></script>
+  <script type="text/javascript" src="/jstree/jstree.min.js"></script>
+  <script src="/uikit/js/uikit.min.js"></script>
+  <script src="/uikit/js/components/notify.min.js"></script>
+  <link rel="stylesheet" href="/jstree/themes/default/style.min.css">
+  <link rel="stylesheet" href="/uikit/css/uikit.min.css">
+  <link rel="stylesheet" href="/uikit/css/components/notify.min.css">
+  <link rel="stylesheet" href="/editor.css">
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="status">
+    <div class="uk-button-group">
+      <button class="uk-button uk-button-primary uk-button-small" id="run" disabled>执行</button>
+      <button class="uk-button uk-button-primary uk-button-small" id="new">新建</button>
+      <button class="uk-button uk-button-primary uk-button-small" id="delete">删除</button>
+      <button class="uk-button uk-button-primary uk-button-small" id="save" disabled>已保存</button>
+    </div>
+    <div class="uk-button-group">
+      <button class="uk-button uk-button-primary uk-button-small" id="upload">上传</button>
+      <button class="uk-button uk-button-primary uk-button-small" id="uploadArchive">上传压缩包</button>
+    </div>
+    <div class="uk-button-group">
+      <button class="uk-button uk-button-primary uk-button-small" id="showProc">进程管理</button>
+      <button class="uk-button uk-button-primary uk-button-small" id="showTools">工具</button>
+    </div>
+    <span id="save-error"></span>
+    <div id="currentPath" class="uk-text-muted"></div>
+  </div>
+  <div id="tree"></div>
+</div>
+
+<div id="editor">
+  <div id="in" class="uninitialized no-preview"></div>
+</div>
+
+<div id="proc" class="uk-modal">
+  <div class="uk-modal-dialog">
+    <a class="uk-modal-close uk-close"></a>
+    <div class="uk-modal-header"><h2>进程管理</h2></div>
+    <div class="uk-button-group start-group">
+    </div>
+    <div class="uk-button-group stop-group">
+    </div>
+    <div class="uk-button-group restart-group">
+    </div>
+  </div>
+</div>
+
+<div id="proc-result" class="uk-modal">
+  <div class="uk-modal-dialog">
+    <a class="uk-modal-close uk-close"></a>
+    <div class="uk-modal-header"><h2>执行结果</h2></div>
+    <pre id="proc-result-message">
+    </pre>
+  </div>
+</div>
+
+<div id="tools" class="uk-modal">
+  <div class="uk-modal-dialog">
+    <a class="uk-modal-close uk-close"></a>
+    <div class="uk-modal-header"><h2>工具</h2></div>
+    <div class="tool-group">
+    </div>
+  </div>
+</div>
+
+<div id="tool-modal"></div>
+
+<div id="modal-confirm" class="uk-modal">
+  <div class="uk-modal-dialog">
+    <div>
+      <div class="uk-margin uk-modal-content"></div>
+      <div class="uk-modal-footer uk-text-right">
+        <button class="uk-button modal-confirm-cancel">取消</button>
+        <button class="uk-button uk-button-primary modal-confirm">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-prompt" class="uk-modal">
+  <div class="uk-modal-dialog">
+    <div>
+      <div class="uk-modal-content uk-form prompt"></div>
+      <div class="uk-margin-small-top uk-modal-content uk-form">
+        <p>
+          <input type="text" class="uk-width-1-1">
+        </p>
+      </div>
+      <div class="uk-modal-footer uk-text-right">
+        <button class="uk-button uk-modal-close">取消</button>
+        <button class="uk-button uk-button-primary js-modal-ok">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/foreign.js"></script>
+<script src="/editor.js"></script>
+</body>
+</html>

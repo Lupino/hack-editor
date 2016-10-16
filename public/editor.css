@@ -1,0 +1,98 @@
+body {
+  overflow: hidden;
+  margin: 0;
+}
+
+#editor {
+  position: fixed;
+  top: 0;
+  left: 250px;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+#in {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 50%;
+  height: auto;
+  overflow: auto;
+  font-size: 12px;
+  box-shadow: -10px 2px 6px 10px rgba(0,0,0,0.4);
+}
+
+#in.uninitialized {
+  background-color: #ebebeb;
+}
+
+#in.no-preview {
+    width: 100%;
+    right: 10px;
+}
+@media screen and (max-width: 1024px) {
+  #in {
+    width: 100%;
+    right: 10px;
+  }
+}
+
+#sidebar {
+  margin: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 249px;
+  border-right: 1px solid #888;
+}
+
+#status {
+  height: 120px;
+  background-color: #ebebeb;
+  text-align: center;
+  white-space: nowrap;
+  border-bottom: 1px solid #888;
+}
+
+#status .uk-button-group, #proc .uk-button-group {
+  display: block;
+  padding-top: 5px;
+}
+
+#status #currentPath {
+  padding-top: 5px;
+}
+
+#save-error {
+  color: red;
+}
+
+#tree {
+  position: fixed;
+  overflow-x: hidden;
+  overflow-y: auto;
+  top: 121px;
+  bottom: 0;
+  left: 0;
+  width: 249px;
+}
+
+#proc-result pre {
+  border: none;
+  background: none;
+}
+
+.uk-notify {
+  width: 500px;
+}
+
+.uk-notify-top-center {
+  margin-left: -250px;
+}
+
+.tool-group button {
+  margin-right: 10px;
+}
