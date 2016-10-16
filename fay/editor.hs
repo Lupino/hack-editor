@@ -12,6 +12,9 @@ import Data.Text (fromString, Text, null, putStrLn, unpack, (<>), splitOn, conca
 import FilePath ((</>), dropFileName, FilePath)
 import HTTP (get, put)
 import File (readFile, saveFile, deleteFile)
+
+import Control.Exception (catch)
+
 import Config
 
 import Proc
@@ -307,7 +310,8 @@ loadConfig :: (Config -> Fay ()) -> Fay ()
 loadConfig done = readFile "/conf/config.json" act
   where act :: Either Text Text -> Fay ()
         act (Left _) = done emptyConfig
-        act (Right txt) = done $ readConfig txt
+        act (Right txt) = catch (return $ readConfig txt) (const $ return emptyConfig)
+                              >>= done
 
 program :: Config -> Fay ()
 program config = do

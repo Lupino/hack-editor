@@ -67,7 +67,7 @@ angelProc dealCmd act = readFile "/conf/deploy.json" readFileAction
         toReloadAngelAction (Right _)    = reloadAngel act
 
 readList :: Text -> [Text]
-readList = ffi "JSON.parse(%1)"
+readList = ffi "(function(txt) { try { return JSON.parse(%1); } catch (e) { return []; }  })(%1)"
 
 showList :: [Text] -> Text
 showList = ffi "JSON.stringify(%1)"
