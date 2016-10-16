@@ -52,7 +52,7 @@ stopProc cmds act = angelProc (difference cmds) act
 angelProc :: ([Text] -> [Text]) -> (Either Text Text -> Fay ()) -> Fay ()
 angelProc dealCmd act = readFile "/conf/deploy.json" readFileAction
   where readFileAction :: Either Text Text -> Fay ()
-        readFileAction err@(Left _) = act err
+        readFileAction (Left _)     = concatFileAndSave "[]" toReloadAngelAction
         readFileAction (Right txt)  =  concatFileAndSave txt toReloadAngelAction
 
         concatFileAndSave :: Text -> (Either Text Text -> Fay ()) -> Fay ()
