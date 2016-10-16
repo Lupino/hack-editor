@@ -85,9 +85,6 @@ isUnsave _ = False
 isTextFile :: FilePath -> Bool
 isTextFile = ffi "isTextFile(%1)"
 
-isPythonFile :: FilePath -> Bool
-isPythonFile = ffi "isPythonFile(%1)"
-
 saveCurrent :: Fay ()
 saveCurrent = do
   saveErrorElem >>= setHtml ""
@@ -176,7 +173,7 @@ readFileAction fn (Right body) = do
            >>= removeAllEditorEvent "change"
            >>= setEditorValue body
            >>= setEditorMode fn
-  if isPythonFile fn then getElementById "run" >>= removeProp "disabled"
+  if (isPythonFile fn || isNodeFile fn) then getElementById "run" >>= removeProp "disabled"
   else getElementById "run" >>= setProp "disabled" "disabled"
 
   when (isTextFile fn) $ void $ getEditor >>= setEditorEvent "change" (const unsaved)

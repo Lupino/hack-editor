@@ -128,7 +128,7 @@ program opts =
       setHeader "Content-Type" $ TL.pack "plain/text"
 
       let args = read $ BL.unpack wb
-      fc <- liftIO $ runProc $ Proc Python (path:args)
+      fc <- liftIO $ runProc $ Proc Node (path:args)
       raw fc
 
   where staticMid = staticPolicy (addBase "public")

@@ -7,7 +7,9 @@ module Proc
     startProc,
     stopProc,
     killProc,
-    exec
+    exec,
+    isPythonFile,
+    isNodeFile
   ) where
 
 import Prelude
@@ -17,9 +19,16 @@ import HTTP (post, toHandler)
 import File (readFile, saveFile)
 import FilePath ((</>), FilePath)
 
+isPythonFile :: FilePath -> Bool
+isPythonFile = ffi "isPythonFile(%1)"
+
+isNodeFile :: FilePath -> Bool
+isNodeFile = ffi "isNodeFile(%1)"
+
 runProc :: FilePath -> [Text] -> (Either Text Text -> Fay ()) -> Fay ()
 runProc fn args act = post uri (pack $ show args) (toHandler act)
-  where uri = "/api/python" </> fn
+  where uri = if isPythonFile fn then "/api/python" </> fn
+              else "/api/node" </> fn
 
 concatFile :: [FilePath] -> FilePath -> (Either Text Text -> Fay ()) -> Fay ()
 concatFile args target act = runProc "/system/concat.py" (target:args) act
