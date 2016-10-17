@@ -5,11 +5,12 @@ import Proc
 import Network (PortID(PortNumber))
 import Web.Scotty (get, post, delete, put, raw, settings, json, param, header,
                    ActionM, redirect, setHeader, scottyOpts, body, middleware,
-                   text, RoutePattern, function)
+                   text, RoutePattern, function, status)
 import Network.Wai (Request(..))
 import Network.Wai.Handler.Warp (setPort, setHost)
 import Network.Wai.Middleware.RequestLogger (logStdout)
 import Network.Wai.Middleware.HttpAuth (basicAuth)
+import Network.HTTP.Types (status404)
 import Data.SecureMem (SecureMem, secureMemFromByteString)
 import Data.Streaming.Network.Internal (HostPreference(Host))
 import Network.Wai.Middleware.Static (staticPolicy, noDots, (>->), addBase)
@@ -90,8 +91,13 @@ program opts =
     get (textRoute [ "api", "file" ]) $ do
       path <- filePath root
       setHeader "Content-Type" $ TL.pack $ BC.unpack $ getMimeType path
-      fc <- liftIO $ BL.readFile path
-      raw fc
+      fileExists <- liftIO $ doesFileExist path
+      if fileExists then do
+        fc <- liftIO $ BL.readFile path
+        raw fc
+      else do
+        status status404
+        text "404 Not Found"
 
     put (textRoute [ "api", "file" ]) $ do
       path <- filePath root

@@ -62,6 +62,7 @@ executable proc
                      , zip-archive
                      , directory
                      , securemem
+                     , http-types
   default-language:    Haskell2010
 
 test-suite proc-test
