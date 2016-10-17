@@ -13,6 +13,8 @@ import FilePath ((</>), dropFileName, FilePath)
 import HTTP (get, put)
 import File (readFile, saveFile, deleteFile)
 
+import Data.Maybe (fromJust, isJust)
+
 import Control.Exception (catch)
 
 import Config
@@ -251,8 +253,10 @@ getProcTarget evt = do
 getProcPrompt :: Event -> Fay Text
 getProcPrompt = getEventTargetAttr "data-prompt"
 
-getModalName :: Event -> Fay Text
-getModalName = getEventTargetAttr "data-modal"
+getModalTool :: [Tool] -> Event -> Fay (Maybe Tool)
+getModalTool tools ev = do
+  toolId <- getEventTargetAttr "data-tool-id" ev
+  return $ getToolByID toolId tools
 
 getProcFile :: Event -> Fay Text
 getProcFile = getEventTargetAttr "data-proc"
@@ -278,12 +282,20 @@ bindRestartProc ev = do
     prom <- getProcPrompt ev
     confirm ("确定重启 " <> prom <> " ?") $ killProc (map toPidFile cmds) (const $ return ())
 
-bindShowToolModal :: Event -> Fay ()
-bindShowToolModal ev = do
-  modalName <- getModalName ev
-  when (not $ null modalName) $ readFile modalName act
+bindShowToolModal :: [Tool] -> Event -> Fay ()
+bindShowToolModal tools ev = do
 
-  where act :: Either Text Text -> Fay ()
+  tool <- getModalTool tools ev
+  when (isJust tool) $ processTool (fromJust tool)
+
+  where processTool :: Tool -> Fay ()
+        processTool tool | not . null $ getToolProcFile tool =
+                            runProcAndShow (getToolProcFile tool) (getToolProcArgv tool)
+                         | not . null $ getToolModalFile tool =
+                            readFile (getToolModalFile tool) act
+                         | otherwise = return ()
+
+        act :: Either Text Text -> Fay ()
         act (Left err)  = error $ unpack err
         act (Right txt) = do
           querySelector "#tool-modal"
@@ -353,7 +365,7 @@ program config = do
       >>= addEventListener "click" bindRestartProc
 
   getElementById "tools"
-      >>= addEventListener "click" bindShowToolModal
+      >>= addEventListener "click" (bindShowToolModal $ getToolList config)
 
   getElementById "run"
       >>= addEventListener "click" (const runCurrentFile)
