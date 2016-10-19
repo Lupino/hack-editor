@@ -38,6 +38,12 @@ setTimer = ffi "(function (t) { window.saveTimeout = t; })(%1)"
 getTimer :: Fay Timer
 getTimer = ffi "window.saveTimeout"
 
+setAutoSave :: Bool -> Fay ()
+setAutoSave = ffi "(function(autosave) { window.autosave = autosave; }) (%1)"
+
+getAutoSave :: Fay Bool
+getAutoSave = ffi "window.autosave"
+
 saveBtn :: Fay Element
 saveBtn = getElementById "save"
 
@@ -59,10 +65,13 @@ unsaved :: Fay ()
 unsaved = do
   setSaveState Unsave
   saveBtn >>= removeProp "disabled" >>= setHtml "保存"
-  t <- getTimer
-  clearTimeout t
-  setTimeout 1000 save
-  return ()
+
+  autosave <- getAutoSave
+  when autosave $ do
+    t <- getTimer
+    clearTimeout t
+    setTimeout 1000 save
+    return ()
   where save :: Timer -> Fay ()
         save t = do
           setTimer t
@@ -327,6 +336,8 @@ loadConfig done = readFile "/conf/config.json" act
 
 program :: Config -> Fay ()
 program config = do
+
+  setAutoSave $ getIsAutoSave config
 
   when (not . null $ getProcModalStyle config) $
     querySelector "#proc .uk-modal-dialog"

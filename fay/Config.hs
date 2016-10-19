@@ -39,7 +39,8 @@ data Config = Config { getStartProcList   :: [ProcessButton],
                        getRestartProcList :: [ProcessButton],
                        getToolList        :: [Tool],
                        getProcModalStyle  :: Text,
-                       getToolModalStyle  :: Text }
+                       getToolModalStyle  :: Text,
+                       getIsAutoSave        :: Bool }
 
 emptyConfig :: Config
 emptyConfig = Config { getStartProcList   = [],
@@ -47,7 +48,8 @@ emptyConfig = Config { getStartProcList   = [],
                        getRestartProcList = [],
                        getToolList        = [],
                        getProcModalStyle  = "",
-                       getToolModalStyle  = "" }
+                       getToolModalStyle  = "",
+                       getIsAutoSave      = True }
 
 renderProcBtn :: ProcessButton -> Text
 renderProcBtn btn = renderButton [("class",       "uk-button " <> sty),
