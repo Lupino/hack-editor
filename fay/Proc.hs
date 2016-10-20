@@ -16,7 +16,7 @@ import Prelude
 import FFI (ffi)
 import Data.Text (fromString, Text, pack)
 import HTTP (post, toHandler)
-import File (readFile, saveFile)
+import RFile (readFile, saveFile)
 import FilePath ((</>), FilePath)
 
 isPythonFile :: FilePath -> Bool

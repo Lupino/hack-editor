@@ -11,7 +11,7 @@ import DOM (getElementById, Event, Element, Timer, addClass,
 import Data.Text (fromString, Text, null, putStrLn, unpack, (<>), splitOn, concat)
 import FilePath ((</>), dropFileName, FilePath)
 import HTTP (get, put)
-import File (readFile, saveFile, deleteFile)
+import RFile (readFile, saveFile, deleteFile)
 
 import Data.Maybe (fromJust, isJust)
 
