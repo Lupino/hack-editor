@@ -6,16 +6,17 @@ module Main (main) where
 import Prelude hiding (null, concat, putStrLn, lines, unlines)
 import qualified Prelude (null)
 import FFI (ffi)
-import DOM (getElementById, Event, Element, Timer, addClass,
-            XMLHttpRequest, setTimeout, clearTimeout, responseText)
-import Data.Text (fromString, Text, null, putStrLn, unpack, (<>), splitOn, concat)
+import DOM (getElementById, Event, Element, Timer, addClass, setTimeout, clearTimeout)
+import Data.Text (fromString, Text, null, putStrLn, (<>), splitOn, concat)
 import FilePath ((</>), dropFileName, FilePath)
-import HTTP (get, put)
+import HTTP (get, put, resolveText)
+
+import FPromise (then_, catch, toResolve, toReject)
 import RFile (readFile, saveFile, deleteFile)
 
 import Data.Maybe (fromJust, isJust)
 
-import Control.Exception (catch)
+import qualified Control.Exception (catch)
 
 import Config
 
@@ -109,11 +110,10 @@ saveCurrent = do
     saving
     editor <- getEditor
     dat <- getEditorValue editor
-    saveFile currentPath dat act
+    void $ saveFile currentPath dat
+              >>= then_ (toResolve $ const saved)
+              >>= catch (toReject $ const unsaved)
 
-  where act :: Either Text Text -> Fay ()
-        act (Left _) = unsaved
-        act (Right _) = saved
 
 newDoc :: Event -> Fay ()
 newDoc _ = do
@@ -123,7 +123,9 @@ newDoc _ = do
 
     let path = currentDirectory </> fn
 
-    put ("/api/file" </> fixed path (isTextFile fn)) "\n" (const updateTree)
+    void $ saveFile (fixed path (isTextFile fn)) "\n"
+                >>= then_ (toResolve $ const updateTree)
+                >>= catch (toReject putStrLn)
 
   where fixed fn True  = fn
         fixed fn False = fn <> ".md"
@@ -132,10 +134,10 @@ deleteDoc :: Event -> Fay ()
 deleteDoc _ = do
   currentPath <- getCurrentPath
   unless (null currentPath) $ do
-    confirm ("删除 " <> currentPath <> " ?") $ deleteFile currentPath act
-  where act :: Either Text Text -> Fay ()
-        act (Left err) = putStrLn err
-        act (Right _) = updateTree
+    confirm ("删除 " <> currentPath <> " ?") $
+      void $ deleteFile currentPath
+                >>= then_ (toResolve $ const updateTree)
+                >>= catch (toReject putStrLn)
 
 data TreeNode = TreeNode { isDir :: Bool, serverPath :: Text, text :: Text }
 
@@ -151,11 +153,9 @@ updateTree = do
   loadTree treeNodeAction
 
 loadTree :: (TreeNode -> Fay ()) -> Fay ()
-loadTree act = get "/api/file" resolve
-  where resolve :: XMLHttpRequest -> Fay ()
-        resolve xhr = do
-          t <- responseText xhr
-          initTree t act
+loadTree act = void $ get "/api/file"
+                          >>= then_ resolveText
+                          >>= then_ (toResolve (flip initTree act))
 
 data Editor
 
@@ -180,9 +180,8 @@ setEditorEvent = ffi "(function (evt, func, editor) { editor.on(evt, func); retu
 removeAllEditorEvent :: Text -> Editor -> Fay Editor
 removeAllEditorEvent = ffi "(function(evt, editor) { editor.removeAllListeners(evt); return editor; })(%1, %2)"
 
-readFileAction :: FilePath -> Either Text Text -> Fay ()
-readFileAction _ (Left err) = error $ unpack err
-readFileAction fn (Right body) = do
+doResolveReadFile :: FilePath -> Text -> Fay ()
+doResolveReadFile fn body = do
   getEditor
            >>= removeAllEditorEvent "change"
            >>= setEditorValue body
@@ -203,7 +202,9 @@ treeNodeAction tn = do
   setCurrentPath currentPath
   setCurrentDirectory currentDirectory
   unless (isDir tn) $
-    readFile currentPath (readFileAction currentPath)
+    void $ readFile currentPath
+              >>= then_ (toResolve $ doResolveReadFile currentPath)
+              >>= catch (toReject print)
 
   where currentPath = serverPath tn
         currentDirectory = if isDir tn then currentPath
@@ -217,11 +218,12 @@ uploadFile isArc _ = selectFile action
   where action :: Text -> Text -> Fay ()
         action name dat = do
           currentDirectory <- getCurrentDirectory
-          put (uri </> currentDirectory </> name) dat (const updateTree)
+          void $ put (uri </> currentDirectory </> name) (Just dat)
+                     >>= then_ (toResolve $ const updateTree)
         uri = if isArc then "/api/archive" else "/api/file"
 
 startProc_ :: [Text] -> Fay ()
-startProc_ cmds = startProc (map toConfFile cmds) (const $ return ())
+startProc_ cmds = void $ startProc (map toConfFile cmds)
 
 toConfFile :: Text -> FilePath
 toConfFile cmd = "/proc" </> cmd <> ".conf"
@@ -230,15 +232,13 @@ toPidFile :: Text -> FilePath
 toPidFile cmd = "/run" </> cmd <> ".pid"
 
 stopProc_ :: [Text] -> Fay ()
-stopProc_ cmds = stopProc (map toConfFile cmds) (const $ return ())
+stopProc_ cmds = void $ stopProc (map toConfFile cmds)
 
 runProcAndShow :: FilePath -> [Text] -> Fay ()
-runProcAndShow fn args = runProc fn args act
-  where act :: Either Text Text -> Fay ()
-        act (Left err)  = showResult err
-        act (Right txt) = showResult txt
-
-        showResult :: Text -> Fay ()
+runProcAndShow fn args = void  $ runProc fn args
+                                    >>= then_ (toResolve showResult)
+                                    >>= catch (toReject showResult)
+  where showResult :: Text -> Fay ()
         showResult txt = do
           getElementById "proc-result-message" >>= setHtml txt
           getModal "#proc-result" >>= showModal
@@ -289,7 +289,7 @@ bindRestartProc ev = do
   cmds <- getProcTarget ev
   when (not $ Prelude.null cmds) $ do
     prom <- getProcPrompt ev
-    confirm ("确定重启 " <> prom <> " ?") $ killProc (map toPidFile cmds) (const $ return ())
+    confirm ("确定重启 " <> prom <> " ?") $ void $ killProc (map toPidFile cmds)
 
 bindShowToolModal :: [Tool] -> Event -> Fay ()
 bindShowToolModal tools ev = do
@@ -301,12 +301,13 @@ bindShowToolModal tools ev = do
         processTool tool | not . null $ getToolProcFile tool =
                             runProcAndShow (getToolProcFile tool) (getToolProcArgv tool)
                          | not . null $ getToolModalFile tool =
-                            readFile (getToolModalFile tool) act
+                            void $ readFile (getToolModalFile tool)
+                                       >>= then_ (toResolve doResolve)
+                                       >>= catch (toReject putStrLn)
                          | otherwise = return ()
 
-        act :: Either Text Text -> Fay ()
-        act (Left err)  = error $ unpack err
-        act (Right txt) = do
+        doResolve :: Text -> Fay ()
+        doResolve txt = do
           querySelector "#tool-modal"
               >>= setHtml txt
               >>= clearEventListeners
@@ -328,11 +329,12 @@ readConfig :: Text -> Config
 readConfig = ffi "JSON.parse(%1)"
 
 loadConfig :: (Config -> Fay ()) -> Fay ()
-loadConfig done = readFile "/conf/config.json" act
-  where act :: Either Text Text -> Fay ()
-        act (Left _) = done emptyConfig
-        act (Right txt) = catch (return $ readConfig txt) (const $ return emptyConfig)
-                              >>= done
+loadConfig done = void $ readFile "/conf/config.json"
+                             >>= then_ (toResolve doResolve)
+                             >>= catch (toReject (const $ done emptyConfig))
+  where doResolve :: Text -> Fay ()
+        doResolve txt = Control.Exception.catch (return $ readConfig txt) (const $ return emptyConfig)
+                            >>= done
 
 program :: Config -> Fay ()
 program config = do

@@ -11,19 +11,17 @@ module RFile
 import Prelude
 import Data.Text (fromString, Text)
 import FilePath ((</>), FilePath)
-import HTTP (get, put, delete, toHandler)
+import HTTP (get, put, delete, resolveText)
+import FPromise (then_, Promise)
 
-saveFile :: FilePath -> Text -> (Either Text Text -> Fay ()) -> Fay ()
-saveFile fn body act = put url body handler
-  where handler = toHandler act
-        url = "/api/file" </> fn
+saveFile :: FilePath -> Text -> Fay Promise
+saveFile fn body = put url (Just body) >>= then_ resolveText
+  where url = "/api/file" </> fn
 
-readFile :: FilePath -> (Either Text Text -> Fay ()) -> Fay ()
-readFile fn act = get url handler
-  where handler = toHandler act
-        url = "/api/file" </> fn
+readFile :: FilePath -> Fay Promise
+readFile fn = get url >>= then_ resolveText
+  where url = "/api/file" </> fn
 
-deleteFile :: FilePath -> (Either Text Text -> Fay ()) -> Fay ()
-deleteFile fn act = delete ur handler
-  where handler = toHandler act
-        ur = "/api/file" </> fn
+deleteFile :: FilePath -> Fay Promise
+deleteFile fn = delete ur >>= then_ resolveText
+  where ur = "/api/file" </> fn

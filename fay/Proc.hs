@@ -15,9 +15,11 @@ module Proc
 import Prelude
 import FFI (ffi)
 import Data.Text (fromString, Text, pack)
-import HTTP (post, toHandler)
+import HTTP (post, resolveText)
 import RFile (readFile, saveFile)
 import FilePath ((</>), FilePath)
+import FPromise (Promise, newPromise, then_, Resolve, Reject, catch, fromResolve,
+                 toResolve, toReject, resolve)
 
 isPythonFile :: FilePath -> Bool
 isPythonFile = ffi "isPythonFile(%1)"
@@ -25,46 +27,49 @@ isPythonFile = ffi "isPythonFile(%1)"
 isNodeFile :: FilePath -> Bool
 isNodeFile = ffi "isNodeFile(%1)"
 
-runProc :: FilePath -> [Text] -> (Either Text Text -> Fay ()) -> Fay ()
-runProc fn args act = post uri (pack $ show args) (toHandler act)
+runProc :: FilePath -> [Text] -> Fay Promise
+runProc fn args = post uri (Just . pack $ show args) >>= then_ resolveText
   where uri = if isPythonFile fn then "/api/python" </> fn
               else "/api/node" </> fn
 
-concatFile :: [FilePath] -> FilePath -> (Either Text Text -> Fay ()) -> Fay ()
-concatFile args target act = runProc "/system/concat.py" (target:args) act
+concatFile :: [FilePath] -> FilePath -> Fay Promise
+concatFile args target = runProc "/system/concat.py" (target:args)
 
-reloadAngel :: (Either Text Text -> Fay ()) -> Fay ()
-reloadAngel act = runProc "/system/reload_angel.py" [] act
+reloadAngel :: Fay Promise
+reloadAngel = runProc "/system/reload_angel.py" []
 
-killProc :: [Text] -> (Either Text Text -> Fay ()) -> Fay ()
-killProc cmds act = runProc "/system/kill_proc.py" cmds act
+killProc :: [Text] -> Fay Promise
+killProc cmds = runProc "/system/kill_proc.py" cmds
 
-exec :: Text -> [Text] -> (Either Text Text -> Fay ()) -> Fay ()
-exec cmd args act = runProc "/system/exec.py" (cmd:args) act
+exec :: Text -> [Text] -> Fay Promise
+exec cmd args = runProc "/system/exec.py" (cmd:args)
 
-startProc :: [Text] -> (Either Text Text -> Fay ()) -> Fay ()
-startProc cmds act = angelProc (union cmds) act
+startProc :: [Text] -> Fay Promise
+startProc cmds = angelProc (union cmds)
 
 
-stopProc :: [Text] -> (Either Text Text -> Fay ()) -> Fay ()
-stopProc cmds act = angelProc (difference cmds) act
+stopProc :: [Text] -> Fay Promise
+stopProc cmds = angelProc (difference cmds)
 
-angelProc :: ([Text] -> [Text]) -> (Either Text Text -> Fay ()) -> Fay ()
-angelProc dealCmd act = readFile "/conf/deploy.json" readFileAction
-  where readFileAction :: Either Text Text -> Fay ()
-        readFileAction (Left _)     = concatFileAndSave "[]" toReloadAngelAction
-        readFileAction (Right txt)  =  concatFileAndSave txt toReloadAngelAction
+angelProc :: ([Text] -> [Text]) -> Fay Promise
+angelProc dealCmd = newPromise doReadConf
+                        >>= then_ (toResolve doConcatFile)
+                        >>= then_ (toResolve doSaveConf)
+                        >>= then_ (toResolve (const $ reloadAngel))
+  where doReadConf :: Resolve Text () -> Reject -> Fay ()
+        doReadConf f _ = void $ readFile "/conf/deploy.json"
+                                    >>= then_ f
+                                    >>= catch (toReject (const $ f_ "[]"))
+          where f_ = fromResolve f
 
-        concatFileAndSave :: Text -> (Either Text Text -> Fay ()) -> Fay ()
-        concatFileAndSave txt act' = concatFile cmds "/conf/deploy.conf" toSaveFile
+        doConcatFile :: Text -> Fay Promise
+        doConcatFile txt = concatFile cmds "/conf/deploy.conf"
+                               >>= then_ (toResolve (const $ resolve cmds))
           where cmds = dealCmd $ readList txt
-                toSaveFile :: Either Text Text -> Fay ()
-                toSaveFile err@(Left _) = act' err
-                toSaveFile (Right _)    = saveFile "/conf/deploy.json" (showList cmds) act'
 
-        toReloadAngelAction :: Either Text Text -> Fay ()
-        toReloadAngelAction err@(Left _) = act err
-        toReloadAngelAction (Right _)    = reloadAngel act
+        doSaveConf :: [Text] -> Fay Promise
+        doSaveConf cmds = saveFile "/conf/deploy.json" (showList cmds)
+
 
 readList :: Text -> [Text]
 readList = ffi "(function(txt) { try { return JSON.parse(%1); } catch (e) { return []; }  })(%1)"
