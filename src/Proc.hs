@@ -25,12 +25,13 @@ import qualified Data.ByteString.Lazy as LB (ByteString, writeFile, hGetContents
 import qualified Data.Text as T (pack)
 import System.Process (createProcess, StdStream(..), proc, std_out, std_err)
 
-data FileTree = Directory String [FileTree] | FileName String Int
+data FileTree = Directory String [FileTree] | FileName String Int | Empty
   deriving (Show)
 
 instance ToJSON FileTree where
   toJSON (Directory dir trees) = object [ T.pack dir .= treeListToJSON trees ]
   toJSON (FileName name size)  = object [T.pack name .= size ]
+  toJSON Empty                 = Null
 
 unionValue :: Value -> Value -> Value
 unionValue (Object a) (Object b) = Object $ union a b
@@ -57,8 +58,11 @@ getFileTreeList topdir = do
         subTree <- getFileTreeList path
         return $ Directory name subTree
       else do
-        size <- fromInteger <$> getFileSize path
-        return $ FileName name size
+        isFile <- doesFileExist path
+        if isFile then do
+          size <- fromInteger <$> getFileSize path
+          return $ FileName name size
+        else return Empty
 
 getFileSize :: FilePath -> IO Integer
 getFileSize path = withFile path ReadMode hFileSize
