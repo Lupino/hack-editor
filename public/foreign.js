@@ -83,27 +83,6 @@ function setEditorMode(editor, fileName) {
 var currentPath = "";
 var currentDirectory = "";
 
-function isTextFile(fn) {
-  if (/\.(json|js|html|markdown|md|rst|css|htm|xml|txt|conf|py|csv|tex|aux|log|out)$/i.exec(fn)) {
-    return true;
-  }
-  return false;
-}
-
-function isPythonFile(fn) {
-  if (/\.py$/.exec(fn)) {
-    return true;
-  }
-  return false;
-}
-
-function isNodeFile(fn) {
-  if (/\.js$/.exec(fn)) {
-    return true;
-  }
-  return false;
-}
-
 function selectFile(callback) {
   var form = $('<form><input type="file" name="test"></form>', { css: { 'display': 'none' }});
   var input = $(form.children()[0]);

@@ -19,10 +19,9 @@ import Data.Maybe (fromJust, isJust)
 import qualified Control.Exception (catch)
 
 import Config
-
 import Proc
-
 import DOMUtils
+import Utils
 
 
 data SaveState = Saved | Saving | Unsave
@@ -96,9 +95,6 @@ saveErrorElem = getElementById "save-error"
 isUnsave :: SaveState -> Bool
 isUnsave Unsave = True
 isUnsave _ = False
-
-isTextFile :: FilePath -> Bool
-isTextFile = ffi "isTextFile(%1)"
 
 saveCurrent :: Fay ()
 saveCurrent = do

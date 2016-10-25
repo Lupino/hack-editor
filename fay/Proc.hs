@@ -7,9 +7,7 @@ module Proc
     startProc,
     stopProc,
     killProc,
-    exec,
-    isPythonFile,
-    isNodeFile
+    exec
   ) where
 
 import Prelude
@@ -20,12 +18,8 @@ import RFile (readFile, saveFile)
 import FilePath ((</>), FilePath)
 import FPromise (Promise, newPromise, then_, Resolve, Reject, catch, fromResolve,
                  toResolve, toReject, resolve)
+import Utils (isPythonFile)
 
-isPythonFile :: FilePath -> Bool
-isPythonFile = ffi "isPythonFile(%1)"
-
-isNodeFile :: FilePath -> Bool
-isNodeFile = ffi "isNodeFile(%1)"
 
 runProc :: FilePath -> [Text] -> Fay Promise
 runProc fn args = post uri (Just . pack $ show args) >>= then_ resolveText
