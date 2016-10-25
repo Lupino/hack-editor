@@ -33,53 +33,6 @@ function clearTree() {
 }
 
 var editorInitialized = false;
-var editor;
-
-function initEditor() {
-  if (editorInitialized) {
-    return editor;
-  }
-
-  $("#in").removeClass("uninitialized");
-  editor = ace.edit("in");
-  editor.setTheme("ace/theme/chrome");
-  editorInitialized = true;
-  return editor;
-}
-
-function setEditorValue(value) {
-  editor.setValue(value);
-}
-
-var MODE_MAP = {
-  "javascript": /\.js$/i,
-  "markdown":   /\.(md|markdown|rst)$/i,
-  "html":       /\.html?$/i,
-  "css":        /\.css$/i,
-  "yaml":       /\.(yaml|yml)$/,
-  "xml":        /\.(svg|xml)$/,
-  "json":       /\.json$/,
-  "python":     /\.py/,
-  "tex":        /\.(tex|aux)/
-};
-
-function getModeFromFileName(fileName) {
-  var mode = "text";
-  for(m in MODE_MAP) {
-    v = MODE_MAP[m];
-    if (v.exec(fileName)) {
-      mode = m;
-      break;
-    }
-  }
-  return mode;
-}
-
-function setEditorMode(editor, fileName) {
-  editor.getSession().setMode("ace/mode/" + getModeFromFileName(fileName));
-  return editor;
-}
-
 var currentPath = "";
 var currentDirectory = "";
 

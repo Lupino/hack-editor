@@ -6,7 +6,8 @@ module Main (main) where
 import Prelude hiding (null, concat, putStrLn, lines, unlines)
 import qualified Prelude (null)
 import FFI (ffi)
-import DOM (getElementById, Event, Element, Timer, addClass, setTimeout, clearTimeout)
+import DOM (getElementById, Event, Element, Timer, addClass, setTimeout,
+            clearTimeout, removeClass)
 import Data.Text (fromString, Text, null, putStrLn, (<>), splitOn, concat)
 import FilePath ((</>), dropFileName, FilePath)
 import HTTP (get, put, resolveText)
@@ -22,6 +23,7 @@ import Config
 import Proc
 import DOMUtils
 import Utils
+import ACEditor
 
 
 data SaveState = Saved | Saving | Unsave
@@ -105,7 +107,7 @@ saveCurrent = do
   when (Prelude.not (null currentPath) && isUnsave saveState && isTextFile currentPath) $ do
     saving
     editor <- getEditor
-    dat <- getEditorValue editor
+    dat <- getValue editor
     void $ saveFile currentPath dat
               >>= then_ (toResolve $ const saved)
               >>= catch (toReject $ const unsaved)
@@ -153,39 +155,38 @@ loadTree act = void $ get "/api/file"
                           >>= then_ resolveText
                           >>= then_ (toResolve (flip initTree act))
 
-data Editor
-
 getEditor :: Fay Editor
-getEditor = initEditor
+getEditor = ffi "window['editor']"
+
+setEditor :: Editor -> Fay ()
+setEditor = ffi "window['editor'] = %1"
+
+isEditorInitialized :: Fay Bool
+isEditorInitialized = ffi "window['editorInitialized']"
+
+setIsEditorInitialized :: Fay ()
+setIsEditorInitialized = ffi "window['editorInitialized'] = true"
 
 initEditor :: Fay Editor
-initEditor = ffi "initEditor()"
-
-setEditorValue :: Text -> Editor -> Fay Editor
-setEditorValue = ffi "(function(value, editor) { editor.setValue(value, -1); return editor })(%1, %2)"
-
-getEditorValue :: Editor -> Fay Text
-getEditorValue = ffi "(function(editor) { return editor.getValue() })(%1)"
-
-setEditorMode :: FilePath -> Editor -> Fay Editor
-setEditorMode = ffi "setEditorMode(%2, %1)"
-
-setEditorEvent :: Text -> (Event -> Fay ()) -> Editor -> Fay Editor
-setEditorEvent = ffi "(function (evt, func, editor) { editor.on(evt, func); return editor; })(%1, %2, %3)"
-
-removeAllEditorEvent :: Text -> Editor -> Fay Editor
-removeAllEditorEvent = ffi "(function(evt, editor) { editor.removeAllListeners(evt); return editor; })(%1, %2)"
+initEditor = do
+  isInitialized <- isEditorInitialized
+  if isInitialized then getEditor
+  else do
+    newEditor "editor" >>= setTheme "chrome" >>= setEditor
+    getElementById "editor" >>= flip removeClass "uninitialized"
+    setIsEditorInitialized
+    getEditor
 
 doResolveReadFile :: FilePath -> Text -> Fay ()
 doResolveReadFile fn body = do
-  getEditor
-           >>= removeAllEditorEvent "change"
-           >>= setEditorValue body
-           >>= setEditorMode fn
+  initEditor
+           >>= removeAllEvent "change"
+           >>= setValue body
+           >>= setMode (getMode fn)
   if (isPythonFile fn || isNodeFile fn) then getElementById "run" >>= removeProp "disabled"
   else getElementById "run" >>= setProp "disabled" "disabled"
 
-  when (isTextFile fn) $ void $ getEditor >>= setEditorEvent "change" (const unsaved)
+  when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const unsaved)
 
 showCurrentPath :: FilePath -> Fay ()
 showCurrentPath path = do

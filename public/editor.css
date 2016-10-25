@@ -3,7 +3,7 @@ body {
   margin: 0;
 }
 
-#editor {
+#main {
   position: fixed;
   top: 0;
   left: 250px;
@@ -12,31 +12,21 @@ body {
   overflow: hidden;
 }
 
-#in {
+#editor {
   position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
-  width: 50%;
+  width: 100%;
   height: auto;
   overflow: auto;
+  right: 10px;
   font-size: 12px;
   box-shadow: -10px 2px 6px 10px rgba(0,0,0,0.4);
 }
 
-#in.uninitialized {
+#editor.uninitialized {
   background-color: #ebebeb;
-}
-
-#in.no-preview {
-    width: 100%;
-    right: 10px;
-}
-@media screen and (max-width: 1024px) {
-  #in {
-    width: 100%;
-    right: 10px;
-  }
 }
 
 #sidebar {
