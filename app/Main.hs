@@ -137,6 +137,15 @@ program opts =
       fc <- liftIO $ runProc $ Proc Node (path:args)
       raw fc
 
+    post (textRoute [ "api", "bash" ]) $ do
+      path <- filePath root
+      wb <- body
+      setHeader "Content-Type" $ TL.pack "plain/text"
+
+      let args = read $ BL.unpack wb
+      fc <- liftIO $ runProc $ Proc Bash (path:args)
+      raw fc
+
   where staticMid = staticPolicy (addBase "public")
         staticMid' = staticPolicy (addBase $ root </> "source")
         port = getPort opts

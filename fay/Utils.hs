@@ -6,7 +6,8 @@ module Utils
     isTextFile,
     isPythonFile,
     isNodeFile,
-    getMode
+    getMode,
+    canProc
   ) where
 
 import Prelude (Bool, otherwise)
@@ -15,13 +16,16 @@ import FilePath (FilePath)
 import Regex (Regex, newRegex_, test, Flag(I))
 
 isTextFile :: FilePath -> Bool
-isTextFile = test (newRegex_ "\\.(json|js|html|markdown|md|rst|css|htm|xml|txt|conf|py|csv|tex|aux|log|out)$" [I])
+isTextFile = test (newRegex_ "\\.(json|js|html|markdown|md|rst|css|htm|xml|txt|conf|py|csv|tex|aux|log|out|sh)$" [I])
 
 isPythonFile :: FilePath -> Bool
 isPythonFile = test (newRegex_ "\\.py$" [I])
 
 isNodeFile :: FilePath -> Bool
 isNodeFile = test (newRegex_ "\\.js$" [I])
+
+canProc :: FilePath -> Bool
+canProc = test (newRegex_ "\\.(js|sh|py)$" [I])
 
 modeMap :: [(Text, Regex)]
 modeMap = [ ("javascript", newRegex_ "\\.js$" [I]),
@@ -32,7 +36,8 @@ modeMap = [ ("javascript", newRegex_ "\\.js$" [I]),
             ("xml", newRegex_ "\\.(svg|xml)$" [I]),
             ("json", newRegex_ "\\.json$" [I]),
             ("python", newRegex_ "\\.py$" [I]),
-            ("txt", newRegex_ "\\.(tex|aux)$" [I])
+            ("txt", newRegex_ "\\.(tex|aux)$" [I]),
+            ("sh", newRegex_ "\\.sh$" [I])
             ]
 
 getMode :: FilePath -> Text

@@ -22,7 +22,7 @@ import qualified Control.Exception (catch)
 import Config
 import Proc
 import DOMUtils
-import Utils
+import Utils (isTextFile, canProc, getMode)
 import ACEditor
 
 
@@ -183,7 +183,7 @@ doResolveReadFile fn body = do
            >>= removeAllEvent "change"
            >>= setValue body
            >>= setMode (getMode fn)
-  if (isPythonFile fn || isNodeFile fn) then getElementById "run" >>= removeProp "disabled"
+  if (canProc fn) then getElementById "run" >>= removeProp "disabled"
   else getElementById "run" >>= setProp "disabled" "disabled"
 
   when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const unsaved)

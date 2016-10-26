@@ -81,12 +81,13 @@ deleteFile fn = do
   fileExists <- doesFileExist fn
   when fileExists $ removeFile fn
 
-data ProcName = Python | Node
+data ProcName = Python | Node | Bash
 data Proc = Proc ProcName [String]
 
 getProcName :: ProcName -> FilePath
 getProcName Python = "python3"
 getProcName Node   = "node"
+getProcName Bash   = "bash"
 
 runProc :: Proc -> IO LB.ByteString
 runProc (Proc name args) = do

@@ -18,13 +18,14 @@ import RFile (readFile, saveFile)
 import FilePath ((</>), FilePath)
 import FPromise (Promise, newPromise, then_, Resolve, Reject, catch, fromResolve,
                  toResolve, toReject, resolve)
-import Utils (isPythonFile)
+import Utils (isPythonFile, isNodeFile)
 
 
 runProc :: FilePath -> [Text] -> Fay Promise
 runProc fn args = post uri (Just . pack $ show args) >>= then_ resolveText
   where uri = if isPythonFile fn then "/api/python" </> fn
-              else "/api/node" </> fn
+              else if isNodeFile fn then "/api/node" </> fn
+              else "/api/bash" </> fn
 
 concatFile :: [FilePath] -> FilePath -> Fay Promise
 concatFile args target = runProc "/system/concat.py" (target:args)
