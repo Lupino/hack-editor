@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module RFile
   (
@@ -8,11 +8,11 @@ module RFile
     deleteFile
   ) where
 
-import Prelude
-import Data.Text (fromString, Text)
-import FilePath ((</>), FilePath)
-import HTTP (get, put, delete, resolveText)
-import FPromise (then_, Promise)
+import           Data.Text (Text, fromString)
+import           FilePath  (FilePath, (</>))
+import           FPromise  (Promise, then_)
+import           HTTP      (delete, get, put, resolveText)
+import           Prelude
 
 saveFile :: FilePath -> Text -> Fay Promise
 saveFile fn body = put url (Just body) >>= then_ resolveText

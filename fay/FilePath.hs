@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module FilePath
   (
@@ -9,8 +9,8 @@ module FilePath
     dropFileName
   ) where
 
-import Data.Text (fromString, Text)
-import FFI (ffi)
+import           Data.Text (Text, fromString)
+import           FFI       (ffi)
 
 type FilePath = Text
 

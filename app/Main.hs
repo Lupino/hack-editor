@@ -1,36 +1,50 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Proc
-import Network (PortID(PortNumber))
-import Web.Scotty (get, post, delete, put, raw, settings, json, param, header,
-                   ActionM, redirect, setHeader, scottyOpts, body, middleware,
-                   text, RoutePattern, function, status)
-import Network.Wai (Request(..))
-import Network.Wai.Handler.Warp (setPort, setHost)
-import Network.Wai.Middleware.RequestLogger (logStdout)
-import Network.Wai.Middleware.HttpAuth (basicAuth)
-import Network.HTTP.Types (status404)
-import Data.SecureMem (SecureMem, secureMemFromByteString)
-import Data.Streaming.Network.Internal (HostPreference(Host))
-import Network.Wai.Middleware.Static (staticPolicy, noDots, (>->), addBase)
-import Data.Default.Class (def)
-import Control.Monad.IO.Class (liftIO)
-import System.FilePath ((</>), dropDrive, dropFileName)
-import Data.List (isPrefixOf)
-import qualified Data.Text as T (Text, pack, unpack)
-import qualified Data.Text.Lazy as TL (pack, unpack)
-import qualified Data.ByteString.Char8 as BC (unpack, pack)
-import qualified Data.ByteString.Lazy.Char8 as BL (readFile, unpack)
-import Data.Aeson (object, (.=))
-import Network.Mime (MimeType, defaultMimeLookup)
-import Data.Maybe (fromJust)
-import Codec.Archive.Zip (toArchive, ZipOption (..), extractFilesFromArchive)
-import System.Directory (doesFileExist)
+import           Codec.Archive.Zip                    (ZipOption (..),
+                                                       extractFilesFromArchive,
+                                                       toArchive)
+import           Control.Monad.IO.Class               (liftIO)
+import           Data.Aeson                           (object, (.=))
+import qualified Data.ByteString.Char8                as BC (pack, unpack)
+import qualified Data.ByteString.Lazy.Char8           as BL (readFile, unpack)
+import           Data.Default.Class                   (def)
+import           Data.List                            (isPrefixOf)
+import           Data.Maybe                           (fromJust)
+import           Data.SecureMem                       (SecureMem,
+                                                       secureMemFromByteString)
+import           Data.Streaming.Network.Internal      (HostPreference (Host))
+import qualified Data.Text                            as T (Text, pack, unpack)
+import qualified Data.Text.Lazy                       as TL (pack, unpack)
+import           Network                              (PortID (PortNumber))
+import           Network.HTTP.Types                   (status404)
+import           Network.Mime                         (MimeType,
+                                                       defaultMimeLookup)
+import           Network.Wai                          (Request (..))
+import           Network.Wai.Handler.Warp             (setHost, setPort)
+import           Network.Wai.Middleware.HttpAuth      (basicAuth)
+import           Network.Wai.Middleware.RequestLogger (logStdout)
+import           Network.Wai.Middleware.Static        (addBase, noDots,
+                                                       staticPolicy, (>->))
+import           Proc
+import           System.Directory                     (doesFileExist)
+import           System.FilePath                      (dropDrive, dropFileName,
+                                                       (</>))
+import           Web.Scotty                           (ActionM, RoutePattern,
+                                                       body, delete, function,
+                                                       get, header, json,
+                                                       middleware, param, post,
+                                                       put, raw, redirect,
+                                                       scottyOpts, setHeader,
+                                                       settings, status, text)
 
-import Options.Applicative (Parser(..), execParser, strOption, option, auto,
-                            long, short, help, value, (<*>), (<>), helper,
-                            fullDesc, info, progDesc, metavar)
+import           Options.Applicative                  (Parser (..), auto,
+                                                       execParser, fullDesc,
+                                                       help, helper, info, long,
+                                                       metavar, option,
+                                                       progDesc, short,
+                                                       strOption, value, (<*>),
+                                                       (<>))
 
 data Options = Options { getHost   :: String,
                          getPort   :: Int,

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module Utils
   (
@@ -10,10 +10,10 @@ module Utils
     canProc
   ) where
 
-import Prelude (Bool, otherwise)
-import Data.Text (fromString, Text)
-import FilePath (FilePath)
-import Regex (Regex, newRegex_, test, Flag(I))
+import           Data.Text (Text, fromString)
+import           FilePath  (FilePath)
+import           Prelude   (Bool, otherwise)
+import           Regex     (Flag (I), Regex, newRegex_, test)
 
 isTextFile :: FilePath -> Bool
 isTextFile = test (newRegex_ "\\.(json|js|html|markdown|md|rst|css|htm|xml|txt|conf|py|csv|tex|aux|log|out|sh)$" [I])

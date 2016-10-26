@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module ACEditor
   (
@@ -13,10 +13,10 @@ module ACEditor
     removeAllEvent
   ) where
 
-import Prelude
-import DOM (Event)
-import Data.Text (fromString, Text)
-import FFI (ffi)
+import           Data.Text (Text, fromString)
+import           DOM       (Event)
+import           FFI       (ffi)
+import           Prelude
 
 data Editor
 

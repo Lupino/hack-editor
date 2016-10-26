@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module Config
   (
@@ -12,8 +12,8 @@ module Config
     renderToolBtn
   ) where
 
-import Prelude hiding (concat, null)
-import Data.Text (fromString, Text, concat, (<>), null)
+import           Data.Text (Text, concat, fromString, null, (<>))
+import           Prelude   hiding (concat, null)
 
 data ProcessButton = ProcessButton { getProcBtnStyle  :: Text,
                                      getProcBtnPrompt :: Text,
@@ -40,7 +40,7 @@ data Config = Config { getStartProcList   :: [ProcessButton],
                        getToolList        :: [Tool],
                        getProcModalStyle  :: Text,
                        getToolModalStyle  :: Text,
-                       getIsAutoSave        :: Bool }
+                       getIsAutoSave      :: Bool }
 
 emptyConfig :: Config
 emptyConfig = Config { getStartProcList   = [],

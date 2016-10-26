@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module DOMUtils
   (
@@ -23,10 +23,10 @@ module DOMUtils
     notify
   ) where
 
-import Prelude
-import FFI (ffi)
-import DOM (Event, Element)
-import Data.Text (fromString, Text)
+import           Data.Text (Text, fromString)
+import           DOM       (Element, Event)
+import           FFI       (ffi)
+import           Prelude
 
 setProp :: Text -> Text -> Element -> Fay Element
 setProp = ffi "(function(prop, val, elem) { elem[prop] = val; return elem })(%1, %2, %3)"

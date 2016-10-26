@@ -1,29 +1,32 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module Main (main) where
 
-import Prelude hiding (null, concat, putStrLn, lines, unlines)
-import qualified Prelude (null)
-import FFI (ffi)
-import DOM (getElementById, Event, Element, Timer, addClass, setTimeout,
-            clearTimeout, removeClass)
-import Data.Text (fromString, Text, null, putStrLn, (<>), splitOn, concat)
-import FilePath ((</>), dropFileName, FilePath)
-import HTTP (get, put, resolveText)
+import           Data.Text         (Text, concat, fromString, null, putStrLn,
+                                    splitOn, (<>))
+import           DOM               (Element, Event, Timer, addClass,
+                                    clearTimeout, getElementById, removeClass,
+                                    setTimeout)
+import           FFI               (ffi)
+import           FilePath          (FilePath, dropFileName, (</>))
+import           HTTP              (get, put, resolveText)
+import           Prelude           hiding (concat, lines, null, putStrLn,
+                                    unlines)
+import qualified Prelude           (null)
 
-import FPromise (then_, catch, toResolve, toReject)
-import RFile (readFile, saveFile, deleteFile)
+import           FPromise          (catch, then_, toReject, toResolve)
+import           RFile             (deleteFile, readFile, saveFile)
 
-import Data.Maybe (fromJust, isJust)
+import           Data.Maybe        (fromJust, isJust)
 
 import qualified Control.Exception (catch)
 
-import Config
-import Proc
-import DOMUtils
-import Utils (isTextFile, canProc, getMode)
-import ACEditor
+import           ACEditor
+import           Config
+import           DOMUtils
+import           Proc
+import           Utils             (canProc, getMode, isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
@@ -96,7 +99,7 @@ saveErrorElem = getElementById "save-error"
 
 isUnsave :: SaveState -> Bool
 isUnsave Unsave = True
-isUnsave _ = False
+isUnsave _      = False
 
 saveCurrent :: Fay ()
 saveCurrent = do

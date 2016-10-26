@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module Proc
   (
@@ -10,15 +10,15 @@ module Proc
     exec
   ) where
 
-import Prelude
-import FFI (ffi)
-import Data.Text (fromString, Text, pack)
-import HTTP (post, resolveText)
-import RFile (readFile, saveFile)
-import FilePath ((</>), FilePath)
-import FPromise (Promise, newPromise, then_, Resolve, Reject, catch, fromResolve,
-                 toResolve, toReject, resolve)
-import Utils (isPythonFile, isNodeFile)
+import           Data.Text (Text, fromString, pack)
+import           FFI       (ffi)
+import           FilePath  (FilePath, (</>))
+import           FPromise  (Promise, Reject, Resolve, catch, fromResolve,
+                            newPromise, resolve, then_, toReject, toResolve)
+import           HTTP      (post, resolveText)
+import           Prelude
+import           RFile     (readFile, saveFile)
+import           Utils     (isNodeFile, isPythonFile)
 
 
 runProc :: FilePath -> [Text] -> Fay Promise

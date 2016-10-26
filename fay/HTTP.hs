@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module HTTP
   (
@@ -12,13 +12,14 @@ module HTTP
     resolveText
   ) where
 
-import Prelude hiding (concat)
-import DOM (XMLHttpRequest, send, xmlHttpRequest, responseText, status)
-import FFI (ffi)
-import Data.Text (fromString, Text, pack, concat)
+import           Data.Text (Text, concat, fromString, pack)
+import           DOM       (XMLHttpRequest, responseText, send, status,
+                            xmlHttpRequest)
+import           FFI       (ffi)
+import           Prelude   hiding (concat)
 
-import FPromise (Promise, newPromise, fromResolve, fromReject, toResolve,
-                 Resolve, Reject, resolve)
+import           FPromise  (Promise, Reject, Resolve, fromReject, fromResolve,
+                            newPromise, resolve, toResolve)
 
 data RequestMethod = GET | POST | PUT | DELETE
 
@@ -48,7 +49,7 @@ fetch method url body = newPromise doFetch
 
                 sendData :: Maybe Text -> XMLHttpRequest -> Fay ()
                 sendData (Just dt) = send_ dt
-                sendData Nothing = send
+                sendData Nothing   = send
 
                 doResolve :: XMLHttpRequest -> Fay ()
                 doResolve xhr = do

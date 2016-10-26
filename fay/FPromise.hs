@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RebindableSyntax #-}
+{-# LANGUAGE RebindableSyntax  #-}
 
 module FPromise
   (
@@ -18,9 +18,9 @@ module FPromise
     reject
   ) where
 
-import Prelude
-import Data.Text (fromString, Text)
-import FFI (ffi)
+import           Data.Text (Text, fromString)
+import           FFI       (ffi)
+import           Prelude
 
 data Promise
 
