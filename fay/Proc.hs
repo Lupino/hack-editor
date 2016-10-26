@@ -28,16 +28,16 @@ runProc fn args = post uri (Just . pack $ show args) >>= then_ resolveText
               else "/api/bash" </> fn
 
 concatFile :: [FilePath] -> FilePath -> Fay Promise
-concatFile args target = runProc "/system/concat.py" (target:args)
+concatFile args target = runProc "/system/concat.sh" (target:args)
 
 reloadAngel :: Fay Promise
-reloadAngel = runProc "/system/reload_angel.py" []
+reloadAngel = runProc "/system/reload_angel.sh" []
 
 killProc :: [Text] -> Fay Promise
-killProc cmds = runProc "/system/kill_proc.py" cmds
+killProc cmds = runProc "/system/kill_proc.sh" cmds
 
 exec :: Text -> [Text] -> Fay Promise
-exec cmd args = runProc "/system/exec.py" (cmd:args)
+exec cmd args = runProc "/system/exec.sh" (cmd:args)
 
 startProc :: [Text] -> Fay Promise
 startProc cmds = angelProc (union cmds)
