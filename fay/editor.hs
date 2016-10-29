@@ -3,30 +3,26 @@
 
 module Main (main) where
 
-import           Data.Text         (Text, concat, fromString, null, putStrLn,
-                                    splitOn, (<>))
-import           DOM               (Element, Event, Timer, addClass,
-                                    clearTimeout, getElementById, removeClass,
-                                    setTimeout)
-import           FFI               (ffi)
-import           FilePath          (FilePath, dropFileName, (</>))
-import           HTTP              (get, put, resolveText)
-import           Prelude           hiding (concat, lines, null, putStrLn,
-                                    unlines)
-import qualified Prelude           (null)
+import           Data.Text  (Text, concat, fromString, null, putStrLn, splitOn,
+                             (<>))
+import           DOM        (Element, Event, Timer, addClass, clearTimeout,
+                             getElementById, removeClass, setTimeout)
+import           FFI        (ffi)
+import           FilePath   (FilePath, dropFileName, (</>))
+import           HTTP       (get, put, resolveText)
+import           Prelude    hiding (concat, lines, null, putStrLn, unlines)
+import qualified Prelude    (null)
 
-import           FPromise          (catch, then_, toReject, toResolve)
-import           RFile             (deleteFile, readFile, saveFile)
+import           FPromise   (catch, then_, toReject, toResolve)
+import           RFile      (deleteFile, readFile, saveFile)
 
-import           Data.Maybe        (fromJust, isJust)
-
-import qualified Control.Exception (catch)
+import           Data.Maybe (fromJust, isJust)
 
 import           ACEditor
 import           Config
 import           DOMUtils
 import           Proc
-import           Utils             (canProc, getMode, isTextFile)
+import           Utils      (canProc, getMode, isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
