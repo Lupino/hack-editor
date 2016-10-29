@@ -24,10 +24,10 @@ data ProcessButton = ProcessButton { getProcBtnStyle  :: Maybe Text,
                                      getProcBtnTitle  :: Text }
 
 procBtnDecoder :: Parser
-procBtnDecoder = withDecoder "ProcessButton" [ rule       "getProcBtnStyle"  "style" toMaybeParser,
-                                               customRule "getProcBtnPrompt" "prompt",
-                                               customRule "getProcList"      "proc",
-                                               customRule "getProcBtnTitle"  "title"
+procBtnDecoder = withDecoder "ProcessButton" [ rule toMaybeParser "getProcBtnStyle"  "style",
+                                               rawRule "getProcBtnPrompt" "prompt",
+                                               rawRule "getProcList"      "proc",
+                                               rawRule "getProcBtnTitle"  "title"
                                                ]
 
 data Tool = Tool { getToolID        :: Text,
@@ -38,12 +38,12 @@ data Tool = Tool { getToolID        :: Text,
                    getToolProcArgv  :: Maybe [Text] }
 
 toolDecoder :: Parser
-toolDecoder = withDecoder "Tool" [ customRule "getToolID"        "id",
-                                   customRule "getToolName"      "name",
-                                   rule       "getToolStyle"     "style" toMaybeParser,
-                                   rule       "getToolModalFile" "modal" toMaybeParser,
-                                   rule       "getToolProcFile"  "proc"  toMaybeParser,
-                                   rule       "getToolProcArgv"  "argv" (listParser rawParser >>> toMaybeParser)
+toolDecoder = withDecoder "Tool" [ rawRule            "getToolID"        "id",
+                                   rawRule            "getToolName"      "name",
+                                   rule toMaybeParser "getToolStyle"     "style",
+                                   rule toMaybeParser "getToolModalFile" "modal",
+                                   rule toMaybeParser "getToolProcFile"  "proc",
+                                   rule (listParser rawParser >>> toMaybeParser) "getToolProcArgv"  "argv"
                                    ]
 
 getToolByID :: Text -> [Tool] -> Maybe Tool
@@ -62,13 +62,13 @@ data Config = Config { getStartProcList   :: [ProcessButton],
                        getIsAutoSave      :: Bool }
 
 configDecoder :: Parser
-configDecoder = withDecoder "Config" [ listRule   "getStartProcList"   "start_list"   procBtnDecoder,
-                                       listRule   "getStopProcList"    "stop_list"    procBtnDecoder,
-                                       listRule   "getRestartProcList" "restart_list" procBtnDecoder,
-                                       listRule   "getToolList"        "tools"        toolDecoder,
-                                       rule       "getProcModalStyle"  "proc_modal_style" toMaybeParser,
-                                       rule       "getToolModalStyle"  "tool_modal_style" toMaybeParser,
-                                       customRule "getIsAutoSave"      "auto_save"
+configDecoder = withDecoder "Config" [ listRule procBtnDecoder "getStartProcList"   "start_list",
+                                       listRule procBtnDecoder "getStopProcList"    "stop_list",
+                                       listRule procBtnDecoder "getRestartProcList" "restart_list",
+                                       listRule toolDecoder    "getToolList"        "tools",
+                                       rule     toMaybeParser  "getProcModalStyle"  "proc_modal_style",
+                                       rule     toMaybeParser  "getToolModalStyle"  "tool_modal_style",
+                                       rawRule                 "getIsAutoSave"      "auto_save"
                                        ]
 
 emptyConfig :: Config
