@@ -16,7 +16,7 @@ import qualified Prelude    (null)
 import           FPromise   (catch, then_, toReject, toResolve)
 import           RFile      (deleteFile, readFile, saveFile)
 
-import           Data.Maybe (fromJust, isJust)
+import           Data.Maybe (fromJust, fromMaybe, isJust)
 
 import           ACEditor
 import           Config
@@ -294,10 +294,10 @@ bindShowToolModal tools ev = do
   when (isJust tool) $ processTool (fromJust tool)
 
   where processTool :: Tool -> Fay ()
-        processTool tool | not . null $ getToolProcFile tool =
-                            runProcAndShow (getToolProcFile tool) (getToolProcArgv tool)
-                         | not . null $ getToolModalFile tool =
-                            void $ readFile (getToolModalFile tool)
+        processTool tool | isJust $ getToolProcFile tool =
+                            runProcAndShow (fromJust $ getToolProcFile tool) (fromMaybe [] $ getToolProcArgv tool)
+                         | isJust $ getToolModalFile tool =
+                            void $ readFile (fromJust $ getToolModalFile tool)
                                        >>= then_ (toResolve doResolve)
                                        >>= catch (toReject putStrLn)
                          | otherwise = return ()
@@ -331,15 +331,15 @@ loadConfig done = void $ readFile "/conf/config.json"
 
 program :: Config -> Fay ()
 program config = do
-
+  print config
   setAutoSave $ getIsAutoSave config
 
-  when (not . null $ getProcModalStyle config) $
+  when (isJust $ getProcModalStyle config) $
     querySelector "#proc .uk-modal-dialog"
-        >>= flip addClass (getProcModalStyle config)
-  when (not . null $ getToolModalStyle config) $
+        >>= flip addClass (fromJust $ getProcModalStyle config)
+  when (isJust $ getToolModalStyle config) $
     querySelector "#tools .uk-modal-dialog"
-        >>= flip addClass (getToolModalStyle config)
+        >>= flip addClass (fromJust $ getToolModalStyle config)
 
   querySelector "#proc .start-group"
       >>= setHtml (concat (map renderProcBtn $ getStartProcList config))
