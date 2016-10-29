@@ -325,16 +325,13 @@ bindProcModal ev = do
     args <- mapM (getProp "value") elems
     runProcAndShow procFile args
 
-readConfig :: Text -> Config
-readConfig = ffi "JSON.parse(%1)"
-
 loadConfig :: (Config -> Fay ()) -> Fay ()
 loadConfig done = void $ readFile "/conf/config.json"
                              >>= then_ (toResolve doResolve)
                              >>= catch (toReject (const $ done emptyConfig))
   where doResolve :: Text -> Fay ()
-        doResolve txt = Control.Exception.catch (return $ readConfig txt) (const $ return emptyConfig)
-                            >>= done
+        doResolve txt = done $ parseConfig txt
+
 
 program :: Config -> Fay ()
 program config = do

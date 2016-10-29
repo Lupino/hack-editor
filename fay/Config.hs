@@ -8,17 +8,26 @@ module Config
     getToolByID,
     Config (..),
     emptyConfig,
+    parseConfig,
     renderProcBtn,
     renderToolBtn
   ) where
 
-import           Data.Text (Text, concat, fromString, null, (<>))
-import           Prelude   hiding (concat, null)
+import           Data.Text  (Text, concat, fromString, null, (<>))
+import           Prelude    hiding (concat, null)
+import           SimpleJSON
 
 data ProcessButton = ProcessButton { getProcBtnStyle  :: Text,
                                      getProcBtnPrompt :: Text,
                                      getProcList      :: Text,
                                      getProcBtnTitle  :: Text }
+
+procBtnDecoder :: Parser
+procBtnDecoder = withDecoder "ProcessButton" [ customRule "getProcBtnStyle"  "style",
+                                               customRule "getProcBtnPrompt" "prompt",
+                                               customRule "getProcList"      "proc",
+                                               customRule "getProcBtnTitle"  "title"
+                                               ]
 
 data Tool = Tool { getToolID        :: Text,
                    getToolName      :: Text,
@@ -26,6 +35,15 @@ data Tool = Tool { getToolID        :: Text,
                    getToolModalFile :: Text,
                    getToolProcFile  :: Text,
                    getToolProcArgv  :: [Text] }
+
+toolDecoder :: Parser
+toolDecoder = withDecoder "Tool" [ customRule "getToolID"        "id",
+                                   customRule "getToolName"      "name",
+                                   customRule "getToolStyle"     "style",
+                                   customRule "getToolModalFile" "modal",
+                                   customRule "getToolProcFile"  "proc",
+                                   customRule "getToolProcArgv"  "argv"
+                                   ]
 
 getToolByID :: Text -> [Tool] -> Maybe Tool
 getToolByID toolId (x:xs) | getToolID x == toolId = Just x
@@ -42,6 +60,16 @@ data Config = Config { getStartProcList   :: [ProcessButton],
                        getToolModalStyle  :: Text,
                        getIsAutoSave      :: Bool }
 
+configDecoder :: Parser
+configDecoder = withDecoder "Config" [ listRule   "getStartProcList"   "start_list"   procBtnDecoder,
+                                       listRule   "getStopProcList"    "stop_list"    procBtnDecoder,
+                                       listRule   "getRestartProcList" "restart_list" procBtnDecoder,
+                                       listRule   "getToolList"        "tools"        toolDecoder,
+                                       customRule "getProcModalStyle"  "proc_modal_style",
+                                       customRule "getToolModalStyle"  "tool_modal_style",
+                                       customRule "getIsAutoSave"      "auto_save"
+                                       ]
+
 emptyConfig :: Config
 emptyConfig = Config { getStartProcList   = [],
                        getStopProcList    = [],
@@ -50,6 +78,9 @@ emptyConfig = Config { getStartProcList   = [],
                        getProcModalStyle  = "",
                        getToolModalStyle  = "",
                        getIsAutoSave      = True }
+
+parseConfig :: Text -> Config
+parseConfig txt = decode txt configDecoder :: Config
 
 renderProcBtn :: ProcessButton -> Text
 renderProcBtn btn = renderButton [("class",       "uk-button " <> sty),
