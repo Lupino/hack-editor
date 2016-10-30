@@ -24,7 +24,7 @@ data ProcessButton = ProcessButton { getProcBtnStyle  :: Maybe Text,
                                      getProcBtnTitle  :: Text }
 
 procBtnDecoder :: Parser
-procBtnDecoder = withDecoder "ProcessButton" [ rule toMaybeParser "getProcBtnStyle"  "style",
+procBtnDecoder = withDecoder "ProcessButton" [ rule (maybeParser rawParser) "getProcBtnStyle"  "style",
                                                rawRule "getProcBtnPrompt" "prompt",
                                                rawRule "getProcList"      "proc",
                                                rawRule "getProcBtnTitle"  "title"
@@ -40,10 +40,10 @@ data Tool = Tool { getToolID        :: Text,
 toolDecoder :: Parser
 toolDecoder = withDecoder "Tool" [ rawRule            "getToolID"        "id",
                                    rawRule            "getToolName"      "name",
-                                   rule toMaybeParser "getToolStyle"     "style",
-                                   rule toMaybeParser "getToolModalFile" "modal",
-                                   rule toMaybeParser "getToolProcFile"  "proc",
-                                   rule (listParser rawParser >>> toMaybeParser) "getToolProcArgv"  "argv"
+                                   rule (maybeParser rawParser) "getToolStyle"     "style",
+                                   rule (maybeParser rawParser) "getToolModalFile" "modal",
+                                   rule (maybeParser rawParser) "getToolProcFile"  "proc",
+                                   rule (maybeParser $ listParser rawParser) "getToolProcArgv"  "argv"
                                    ]
 
 getToolByID :: Text -> [Tool] -> Maybe Tool
@@ -66,8 +66,8 @@ configDecoder = withDecoder "Config" [ listRule procBtnDecoder "getStartProcList
                                        listRule procBtnDecoder "getStopProcList"    "stop_list",
                                        listRule procBtnDecoder "getRestartProcList" "restart_list",
                                        listRule toolDecoder    "getToolList"        "tools",
-                                       rule     toMaybeParser  "getProcModalStyle"  "proc_modal_style",
-                                       rule     toMaybeParser  "getToolModalStyle"  "tool_modal_style",
+                                       rule     (maybeParser rawParser)  "getProcModalStyle"  "proc_modal_style",
+                                       rule     (maybeParser rawParser)  "getToolModalStyle"  "tool_modal_style",
                                        rawRule                 "getIsAutoSave"      "auto_save"
                                        ]
 
