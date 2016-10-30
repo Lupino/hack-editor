@@ -331,7 +331,6 @@ loadConfig done = void $ readFile "/conf/config.json"
 
 program :: Config -> Fay ()
 program config = do
-  print config
   setAutoSave $ getIsAutoSave config
 
   when (isJust $ getProcModalStyle config) $
