@@ -34,7 +34,6 @@ library
 
                      -- required by fay compiler
                      , fay
-                     , fay-builder
                      , fay-dom
   default-language:    Haskell2010
 
