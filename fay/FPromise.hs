@@ -57,7 +57,7 @@ then__ f g = then___ (fromResolve f) (fromReject g)
 
 then___ :: (a -> Fay b) -> (Text -> Fay ()) -> Promise -> Fay Promise
 then___ = ffi "(function(resolve, reject, promise) {\
-                    \   return promise.then(resolve, reject);\
+                    \   return promise['then'](resolve, reject);\
                     \})(%1, %2, %3)"
 
 catch :: Reject -> Promise -> Fay Promise
@@ -69,7 +69,7 @@ catch_ = ffi "(function(reject, promise) {\
            \})(%1, %2)"
 
 resolve :: a -> Fay Promise
-resolve = ffi "Promise.resolve(%1)"
+resolve = ffi "Promise['resolve'](%1)"
 
 reject :: Text -> Fay Promise
-reject = ffi "Promise.reject(%1)"
+reject = ffi "Promise['reject'](%1)"

@@ -33,7 +33,7 @@ setOnLoadHandler :: (XMLHttpRequest -> Fay ()) -> XMLHttpRequest -> Fay XMLHttpR
 setOnLoadHandler = ffi "(function(handler, xhr) { xhr['onload'] = function() { handler(xhr); }; return xhr; })(%1, %2)"
 
 setOnErrorHandler :: (Text -> Fay ()) -> XMLHttpRequest -> Fay XMLHttpRequest
-setOnErrorHandler = ffi "(function(handler, xhr) { xhr['onerror'] = function(e) { handler(e.toString()); }; return xhr; })(%1, %2)"
+setOnErrorHandler = ffi "(function(handler, xhr) { xhr['onerror'] = function(e) { handler(e['toString']()); }; return xhr; })(%1, %2)"
 
 fetch :: RequestMethod -> Text -> Maybe Text -> Fay Promise
 fetch method url body = newPromise doFetch

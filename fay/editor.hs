@@ -28,22 +28,22 @@ import           Utils      (canProc, getMode, isTextFile)
 data SaveState = Saved | Saving | Unsave
 
 setSaveState :: SaveState -> Fay ()
-setSaveState = ffi "(function (state) { window.saveState = state['instance']})(%1)"
+setSaveState = ffi "(function (state) { window['saveState'] = state['instance']})(%1)"
 
 getSaveState :: Fay SaveState
-getSaveState = ffi "{ instance: window.saveState }"
+getSaveState = ffi "{ instance: window['saveState'] }"
 
 setTimer :: Timer -> Fay ()
-setTimer = ffi "(function (t) { window.saveTimeout = t; })(%1)"
+setTimer = ffi "(function (t) { window['saveTimeout'] = t; })(%1)"
 
 getTimer :: Fay Timer
-getTimer = ffi "window.saveTimeout"
+getTimer = ffi "window['saveTimeout']"
 
 setAutoSave :: Bool -> Fay ()
-setAutoSave = ffi "(function(autosave) { window.autosave = autosave; }) (%1)"
+setAutoSave = ffi "(function(autosave) { window['autosave'] = autosave; }) (%1)"
 
 getAutoSave :: Fay Bool
-getAutoSave = ffi "window.autosave"
+getAutoSave = ffi "window['autosave']"
 
 saveBtn :: Fay Element
 saveBtn = getElementById "save"
@@ -79,16 +79,16 @@ unsaved = do
           saveCurrent
 
 getCurrentPath :: Fay FilePath
-getCurrentPath = ffi "window.currentPath"
+getCurrentPath = ffi "window['currentPath']"
 
 setCurrentPath :: FilePath -> Fay ()
-setCurrentPath = ffi "(function(p){window.currentPath = p })(%1)"
+setCurrentPath = ffi "(function(p){window['currentPath'] = p })(%1)"
 
 getCurrentDirectory :: Fay FilePath
-getCurrentDirectory = ffi "window.currentDirectory"
+getCurrentDirectory = ffi "window['currentDirectory']"
 
 setCurrentDirectory :: FilePath -> Fay ()
-setCurrentDirectory = ffi "(function(p){window.currentDirectory = p })(%1)"
+setCurrentDirectory = ffi "(function(p){window['currentDirectory'] = p })(%1)"
 
 saveErrorElem :: Fay Element
 saveErrorElem = getElementById "save-error"

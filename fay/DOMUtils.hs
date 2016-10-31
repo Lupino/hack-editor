@@ -38,30 +38,30 @@ getProp :: Text -> Element -> Fay Text
 getProp = ffi "%2[%1]"
 
 querySelector :: Text -> Fay Element
-querySelector = ffi "document.querySelector(%1)"
+querySelector = ffi "document['querySelector'](%1)"
 
 querySelectorAll :: Text -> Fay [Element]
-querySelectorAll = ffi "document.querySelectorAll(%1)"
+querySelectorAll = ffi "document['querySelectorAll'](%1)"
 
 setHtml :: Text -> Element -> Fay Element
-setHtml = ffi "(function(text, elem) { elem.innerHTML = text; return elem; })(%1, %2)"
+setHtml = ffi "(function(text, elem) { elem['innerHTML'] = text; return elem; })(%1, %2)"
 
 setDisplay :: Text -> Element -> Fay Element
-setDisplay = ffi "(function (val, elem) { elem.style.display = val; return elem })(%1, %2)"
+setDisplay = ffi "(function (val, elem) { elem['style']['display'] = val; return elem })(%1, %2)"
 
 addEventListener :: Text -> (Event -> Fay a) -> Element ->  Fay Element
-addEventListener = ffi "(function(evt, func, elem) {elem.addEventListener(evt, func); return elem;})(%1, %2, %3)"
+addEventListener = ffi "(function(evt, func, elem) {elem['addEventListener'](evt, func); return elem;})(%1, %2, %3)"
 
 clearEventListeners :: Element -> Fay Element
 clearEventListeners = ffi "(function(elem) {\
-                          \  var elem_ = elem.cloneNode(true);\
-                          \  elem.parentNode.replaceChild(elem_, elem);\
+                          \  var elem_ = elem['cloneNode'](true);\
+                          \  elem['parentNode']['replaceChild'](elem_, elem);\
                           \})(%1)"
 
 getEventTargetAttr :: Text -> Event -> Fay Text
 getEventTargetAttr = ffi "(function(txt, evt) {\
-                    \  var elem = evt.target;\
-                    \  var attr = elem.getAttribute(txt);\
+                    \  var elem = evt['target'];\
+                    \  var attr = elem['getAttribute'](txt);\
                     \  if (attr) {\
                     \    return attr;\
                     \  } else {\
