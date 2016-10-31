@@ -72,13 +72,13 @@ getEventTargetAttr = ffi "(function(txt, evt) {\
 data Modal
 
 getModal :: Text -> Fay Modal
-getModal = ffi "UIkit.modal(%1)"
+getModal = ffi "UIkit['modal'](%1)"
 
 showModal :: Modal -> Fay ()
-showModal = ffi "%1.show()"
+showModal = ffi "%1['show']()"
 
 hideModal :: Modal -> Fay ()
-hideModal = ffi "%1.hide()"
+hideModal = ffi "%1['hide']()"
 
 prompt :: Text -> (Text -> Fay ()) -> Fay ()
 prompt msg doPrompt = do
@@ -118,4 +118,4 @@ confirm :: Text -> Fay () -> Fay ()
 confirm msg doConfirm = confirm_ msg doConfirm (return ())
 
 notify :: Text -> Fay ()
-notify = ffi "UIkit.notify(%1)"
+notify = ffi "UIkit['notify'](%1)"
