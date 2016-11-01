@@ -9,7 +9,8 @@ module HTTP
     post,
     put,
     delete,
-    resolveText
+    resolveText,
+    resolveValue
   ) where
 
 import           Data.Text (Text, concat, fromString, pack)
@@ -19,7 +20,7 @@ import           FFI       (ffi)
 import           Prelude   hiding (concat)
 
 import           FPromise  (Promise, Reject, Resolve, fromReject, fromResolve,
-                            newPromise, resolve, toResolve)
+                            newPromise, toResolve)
 
 data RequestMethod = GET | POST | PUT | DELETE
 
@@ -73,7 +74,10 @@ put = fetch PUT
 delete :: Text -> Fay Promise
 delete ur = fetch DELETE ur Nothing
 
-resolveText :: Resolve XMLHttpRequest Promise
-resolveText = toResolve doResolve
-  where doResolve :: XMLHttpRequest -> Fay Promise
-        doResolve xhr = responseText xhr >>= resolve
+resolveText :: Resolve XMLHttpRequest Text
+resolveText = resolveValue return
+
+resolveValue :: (Text -> Fay a) -> Resolve XMLHttpRequest a
+resolveValue dec = toResolve (doResolve dec)
+  where doResolve :: (Text -> Fay a) -> XMLHttpRequest -> Fay a
+        doResolve dec' xhr = responseText xhr >>= dec'

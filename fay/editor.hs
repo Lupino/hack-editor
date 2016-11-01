@@ -323,10 +323,8 @@ bindProcModal ev = do
 
 loadConfig :: (Config -> Fay ()) -> Fay ()
 loadConfig done = void $ readFile "/conf/config.json"
-                             >>= then_ (toResolve doResolve)
+                             >>= then_ (toResolve (done . parseConfig))
                              >>= catch (toReject (const $ done emptyConfig))
-  where doResolve :: Text -> Fay ()
-        doResolve txt = done $ parseConfig txt
 
 
 program :: Config -> Fay ()
