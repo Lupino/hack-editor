@@ -30,9 +30,7 @@ library
                      , text
                      , unordered-containers
                      , bytestring
-                     , process
                      , process-extras
-                     , unix
 
                      -- required by fay compiler
                      , fay
@@ -43,7 +41,6 @@ executable proc
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  ld-options:          -static -pthread
   build-depends:       base
                      , proc
                      , scotty
