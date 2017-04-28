@@ -17,7 +17,7 @@ import           Data.Streaming.Network.Internal      (HostPreference (Host))
 import qualified Data.Text                            as T (Text, pack, unpack)
 import qualified Data.Text.Lazy                       as TL (pack, unpack)
 import           Network                              (PortID (PortNumber))
-import           Network.HTTP.Types                   (status404)
+import           Network.HTTP.Types                   (status404, status500)
 import           Network.Mime                         (MimeType,
                                                        defaultMimeLookup)
 import           Network.Wai                          (Request (..))
@@ -133,32 +133,9 @@ program opts =
 
       text "OK"
 
-    post (textRoute [ "api", "python" ]) $ do
-      path <- filePath root
-      wb <- body
-      setHeader "Content-Type" $ TL.pack "plain/text"
-
-      let args = read $ BL.unpack wb
-      fc <- liftIO $ runProc $ Proc Python (path:args)
-      raw fc
-
-    post (textRoute [ "api", "node" ]) $ do
-      path <- filePath root
-      wb <- body
-      setHeader "Content-Type" $ TL.pack "plain/text"
-
-      let args = read $ BL.unpack wb
-      fc <- liftIO $ runProc $ Proc Node (path:args)
-      raw fc
-
-    post (textRoute [ "api", "bash" ]) $ do
-      path <- filePath root
-      wb <- body
-      setHeader "Content-Type" $ TL.pack "plain/text"
-
-      let args = read $ BL.unpack wb
-      fc <- liftIO $ runProc $ Proc Bash (path:args)
-      raw fc
+    post (textRoute [ "api", "python" ]) $ runProc_ root Python
+    post (textRoute [ "api", "node" ])   $ runProc_ root Node
+    post (textRoute [ "api", "bash" ])   $ runProc_ root Bash
 
   where staticMid = staticPolicy (addBase "public")
         staticMid' = staticPolicy (addBase $ root </> "source")
@@ -169,6 +146,18 @@ program opts =
         serverOpts = def { settings = setPort port $ setHost (Host host) (settings def) }
         admin = BC.pack $ getAdmin opts
         passwd = secureMemFromByteString $ BC.pack $ getPasswd opts
+
+runProc_ :: FilePath -> ProcName -> ActionM ()
+runProc_ root name = do
+  path <- filePath root
+  wb <- body
+  setHeader "Content-Type" $ TL.pack "plain/text"
+
+  let args = read $ BL.unpack wb
+  fc <- liftIO $ runProc $ Proc name (path:args)
+  case fc of
+    Left err  -> status status500 >> raw err
+    Right out -> raw out
 
 filePath :: FilePath -> ActionM FilePath
 filePath root = do

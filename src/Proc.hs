@@ -10,24 +10,28 @@ module Proc
     runProc
   ) where
 
-import           Control.Monad        (forM, unless, when)
-import           Data.Maybe           (fromMaybe)
-import           System.Directory     (createDirectoryIfMissing,
-                                       doesDirectoryExist, doesFileExist,
-                                       getDirectoryContents,
-                                       removeDirectoryRecursive, removeFile)
-import           System.FilePath      (dropFileName, (</>))
+import           Control.Monad                  (forM, unless, when)
+import           Data.Maybe                     (fromMaybe)
+import           System.Directory               (createDirectoryIfMissing,
+                                                 doesDirectoryExist,
+                                                 doesFileExist,
+                                                 getDirectoryContents,
+                                                 removeDirectoryRecursive,
+                                                 removeFile)
+import           System.FilePath                (dropFileName, (</>))
 
-import           System.IO            (IOMode (ReadMode), hFileSize, withFile)
+import           System.IO                      (IOMode (ReadMode), hFileSize,
+                                                 withFile)
 
-import           Data.Aeson           (ToJSON (..), Value (..), encode, object,
-                                       (.=))
-import qualified Data.ByteString.Lazy as LB (ByteString, concat, hGetContents,
-                                             writeFile)
-import           Data.HashMap.Strict  (union)
-import qualified Data.Text            as T (pack)
-import           System.Process       (StdStream (..), createProcess, proc,
-                                       std_err, std_out)
+import           Data.Aeson                     (ToJSON (..), Value (..),
+                                                 encode, object, (.=))
+import qualified Data.ByteString.Lazy           as LB (ByteString, concat,
+                                                       empty, hGetContents,
+                                                       writeFile)
+import           Data.HashMap.Strict            (union)
+import qualified Data.Text                      as T (pack)
+import           System.Exit                    (ExitCode (..))
+import           System.Process.ByteString.Lazy (readProcessWithExitCode)
 
 data FileTree = Directory String [FileTree] | FileName String Int | Empty
   deriving (Show)
@@ -93,11 +97,9 @@ getProcName Python = "python3"
 getProcName Node   = "node"
 getProcName Bash   = "bash"
 
-runProc :: Proc -> IO LB.ByteString
+runProc :: Proc -> IO (Either LB.ByteString LB.ByteString)
 runProc (Proc name args) = do
-  (_,Just hout,Just herr,_) <- createProcess (proc (getProcName name) args){ std_out = CreatePipe,
-                                                                     std_err = CreatePipe }
-  out <- LB.hGetContents hout
-  err <- LB.hGetContents herr
-
-  return $ LB.concat [err, out]
+  (code, out, err) <- readProcessWithExitCode (getProcName name) args LB.empty
+  case code of
+    ExitSuccess   -> return (Right out)
+    ExitFailure _ -> return (Left err)

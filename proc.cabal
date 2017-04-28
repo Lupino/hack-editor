@@ -31,6 +31,8 @@ library
                      , unordered-containers
                      , bytestring
                      , process
+                     , process-extras
+                     , unix
 
                      -- required by fay compiler
                      , fay
