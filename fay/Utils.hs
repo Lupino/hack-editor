@@ -36,7 +36,7 @@ modeMap = [ ("javascript", newRegex_ "\\.js$" [I]),
             ("xml", newRegex_ "\\.(svg|xml)$" [I]),
             ("json", newRegex_ "\\.json$" [I]),
             ("python", newRegex_ "\\.py$" [I]),
-            ("txt", newRegex_ "\\.(tex|aux)$" [I]),
+            ("tex", newRegex_ "\\.(tex|aux)$" [I]),
             ("sh", newRegex_ "\\.sh$" [I])
             ]
 
