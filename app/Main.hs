@@ -38,13 +38,13 @@ import           Web.Scotty                           (ActionM, RoutePattern,
                                                        scottyOpts, setHeader,
                                                        settings, status, text)
 
+import           Data.Semigroup                       ((<>))
 import           Options.Applicative                  (Parser (..), auto,
                                                        execParser, fullDesc,
                                                        help, helper, info, long,
                                                        metavar, option,
                                                        progDesc, short,
-                                                       strOption, value, (<*>),
-                                                       (<>))
+                                                       strOption, value, (<*>))
 
 data Options = Options { getHost   :: String,
                          getPort   :: Int,
@@ -56,21 +56,21 @@ parser :: Parser Options
 parser = Options <$> strOption (long "host"
                                 <> short 'H'
                                 <> metavar "HOST"
-                                <> help "The sshakyll server host."
+                                <> help "Proc server host."
                                 <> value "127.0.0.1")
                  <*> option auto (long "port"
                                   <> short 'p'
                                   <> metavar "PORT"
-                                  <> help "The sshakyll server port."
+                                  <> help "Proc server port."
                                   <> value 8000 )
                  <*> strOption (long "directory"
                                 <> short 'd'
                                 <> metavar "DIR"
-                                <> help "Site root dirctory."
+                                <> help "Proc root dirctory."
                                 <> value "" )
                  <*> strOption (long "admin"
                                 <> metavar "ADMIN"
-                                <> help "Site admin."
+                                <> help "Proc admin."
                                 <> value "admin" )
                  <*> strOption (long "passwd"
                                 <> metavar "PASSWD"
