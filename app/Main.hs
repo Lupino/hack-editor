@@ -5,52 +5,43 @@ import           Codec.Archive.Zip                    (ZipOption (..),
                                                        extractFilesFromArchive,
                                                        toArchive)
 import           Control.Monad.IO.Class               (liftIO)
-import           Data.Aeson                           (object, (.=))
-import qualified Data.ByteString.Char8                as BC (pack, unpack)
+import qualified Data.ByteString.Char8                as BC (unpack)
 import qualified Data.ByteString.Lazy.Char8           as BL (readFile, unpack)
 import           Data.Default.Class                   (def)
 import           Data.List                            (isPrefixOf)
-import           Data.Maybe                           (fromJust)
-import           Data.SecureMem                       (SecureMem,
-                                                       secureMemFromByteString)
 import           Data.Streaming.Network.Internal      (HostPreference (Host))
 import qualified Data.Text                            as T (Text, pack, unpack)
-import qualified Data.Text.Lazy                       as TL (pack, unpack)
-import           Network                              (PortID (PortNumber))
+import qualified Data.Text.Lazy                       as TL (pack)
 import           Network.HTTP.Types                   (status404, status500)
 import           Network.Mime                         (MimeType,
                                                        defaultMimeLookup)
 import           Network.Wai                          (Request (..))
 import           Network.Wai.Handler.Warp             (setHost, setPort)
-import           Network.Wai.Middleware.HttpAuth      (basicAuth)
 import           Network.Wai.Middleware.RequestLogger (logStdout)
-import           Network.Wai.Middleware.Static        (addBase, noDots,
-                                                       staticPolicy, (>->))
+import           Network.Wai.Middleware.Static        (addBase, staticPolicy)
 import           Proc
 import           System.Directory                     (doesFileExist)
-import           System.FilePath                      (dropDrive, dropFileName,
-                                                       (</>))
+import           System.FilePath                      (dropFileName, (</>))
 import           Web.Scotty                           (ActionM, RoutePattern,
                                                        body, delete, function,
-                                                       get, header, json,
-                                                       middleware, param, post,
-                                                       put, raw, redirect,
-                                                       scottyOpts, setHeader,
-                                                       settings, status, text)
+                                                       get, json, middleware,
+                                                       param, post, put, raw,
+                                                       redirect, scottyOpts,
+                                                       setHeader, settings,
+                                                       status, text)
 
-import           Data.Semigroup                       ((<>))
 import           Options.Applicative                  (Parser (..), auto,
                                                        execParser, fullDesc,
                                                        help, helper, info, long,
                                                        metavar, option,
                                                        progDesc, short,
-                                                       strOption, value, (<*>))
+                                                       strOption, value)
 
-data Options = Options { getHost   :: String,
-                         getPort   :: Int,
-                         getRoot   :: String,
-                         getAdmin  :: String,
-                         getPasswd :: String }
+data Options = Options
+  { getHost :: String
+  , getPort :: Int
+  , getRoot :: String
+  }
 
 parser :: Parser Options
 parser = Options <$> strOption (long "host"
@@ -68,14 +59,6 @@ parser = Options <$> strOption (long "host"
                                 <> metavar "DIR"
                                 <> help "Proc root dirctory."
                                 <> value "" )
-                 <*> strOption (long "admin"
-                                <> metavar "ADMIN"
-                                <> help "Proc admin."
-                                <> value "admin" )
-                 <*> strOption (long "passwd"
-                                <> metavar "PASSWD"
-                                <> help "Admin password."
-                                <> value "passwd" )
 
 main :: IO ()
 main = execParser opts >>= program
@@ -90,8 +73,6 @@ program opts =
     middleware logStdout
     middleware staticMid
     middleware staticMid'
-    middleware $ basicAuth (\u p -> return $ u == admin && secureMemFromByteString p == passwd)
-      "My Realm"
 
     get "/" $ do
       hasEditor <- liftIO $ doesFileExist editor
@@ -144,8 +125,6 @@ program opts =
         root = getRoot opts
         editor = root </> "source" </> "editor" </> "index.html"
         serverOpts = def { settings = setPort port $ setHost (Host host) (settings def) }
-        admin = BC.pack $ getAdmin opts
-        passwd = secureMemFromByteString $ BC.pack $ getPasswd opts
 
 runProc_ :: FilePath -> ProcName -> ActionM ()
 runProc_ root name = do

@@ -19,7 +19,6 @@ import           RFile      (deleteFile, readFile, saveFile)
 import           Data.Maybe (fromJust, fromMaybe, isJust)
 
 import           ACEditor
-import           Config
 import           DOMUtils
 import           Proc
 import           Utils      (canProc, getMode, isTextFile)
@@ -218,18 +217,6 @@ uploadFile isArc _ = selectFile action
                      >>= then_ (toResolve $ const updateTree)
         uri = if isArc then "/api/archive" else "/api/file"
 
-startProc_ :: [Text] -> Fay ()
-startProc_ cmds = void $ startProc (map toConfFile cmds)
-
-toConfFile :: Text -> FilePath
-toConfFile cmd = "/proc" </> cmd <> ".conf"
-
-toPidFile :: Text -> FilePath
-toPidFile cmd = "/run" </> cmd <> ".pid"
-
-stopProc_ :: [Text] -> Fay ()
-stopProc_ cmds = void $ stopProc (map toConfFile cmds)
-
 runProcAndShow :: FilePath -> [Text] -> Fay ()
 runProcAndShow fn args = void  $ runProc fn args
                                     >>= then_ (toResolve showResult)
@@ -244,108 +231,14 @@ runCurrentFile = do
   currentPath <- getCurrentPath
   runProcAndShow currentPath []
 
-showTools :: Fay ()
-showTools = getModal "#tools" >>= showModal
-
-showProc :: Fay ()
-showProc = getModal "#proc" >>= showModal
-
 getProcTarget :: Event -> Fay [Text]
 getProcTarget evt = do
   procs <- getEventTargetAttr "data-proc" evt
-  return $ splitOn ',' procs
+  return $ splitOn "," procs
 
-getProcPrompt :: Event -> Fay Text
-getProcPrompt = getEventTargetAttr "data-prompt"
-
-getModalTool :: [Tool] -> Event -> Fay (Maybe Tool)
-getModalTool tools ev = do
-  toolId <- getEventTargetAttr "data-tool-id" ev
-  return $ getToolByID toolId tools
-
-getProcFile :: Event -> Fay Text
-getProcFile = getEventTargetAttr "data-proc"
-
-bindStartProc :: Event -> Fay ()
-bindStartProc ev = do
-  cmds <- getProcTarget ev
-  when (not $ Prelude.null cmds) $ do
-    prom <- getProcPrompt ev
-    confirm ("确定启动 " <> prom <> " ?") $ startProc_ cmds
-
-bindStopProc :: Event -> Fay ()
-bindStopProc ev = do
-  cmds <- getProcTarget ev
-  when (not $ Prelude.null cmds) $ do
-    prom <- getProcPrompt ev
-    confirm ("确定关闭 " <> prom <> " ?") $ stopProc_ cmds
-
-bindRestartProc :: Event -> Fay ()
-bindRestartProc ev = do
-  cmds <- getProcTarget ev
-  when (not $ Prelude.null cmds) $ do
-    prom <- getProcPrompt ev
-    confirm ("确定重启 " <> prom <> " ?") $ void $ killProc (map toPidFile cmds)
-
-bindShowToolModal :: [Tool] -> Event -> Fay ()
-bindShowToolModal tools ev = do
-
-  tool <- getModalTool tools ev
-  when (isJust tool) $ processTool (fromJust tool)
-
-  where processTool :: Tool -> Fay ()
-        processTool tool | isJust $ getToolProcFile tool =
-                            runProcAndShow (fromJust $ getToolProcFile tool) (fromMaybe [] $ getToolProcArgv tool)
-                         | isJust $ getToolModalFile tool =
-                            void $ readFile (fromJust $ getToolModalFile tool)
-                                       >>= then_ (toResolve doResolve)
-                                       >>= catch (toReject putStrLn)
-                         | otherwise = return ()
-
-        doResolve :: Text -> Fay ()
-        doResolve txt = do
-          querySelector "#tool-modal"
-              >>= setHtml txt
-              >>= clearEventListeners
-
-          querySelector ("#tool-modal .proc")
-              >>= addEventListener "click" bindProcModal
-
-          getModal "#tool-modal .uk-modal" >>= showModal
-
-bindProcModal :: Event -> Fay ()
-bindProcModal ev = do
-  procFile <- getProcFile ev
-  when (not $ null procFile) $ do
-    elems <- querySelectorAll ("#tool-modal input")
-    args <- mapM (getProp "value") elems
-    runProcAndShow procFile args
-
-loadConfig :: (Config -> Fay ()) -> Fay ()
-loadConfig done = void $ readFile "/conf/config.json"
-                             >>= then_ (toResolve (done . parseConfig))
-                             >>= catch (toReject (const $ done emptyConfig))
-
-
-program :: Config -> Fay ()
-program config = do
-  setAutoSave $ getIsAutoSave config
-
-  when (isJust $ getProcModalStyle config) $
-    querySelector "#proc .uk-modal-dialog"
-        >>= flip addClass (fromJust $ getProcModalStyle config)
-  when (isJust $ getToolModalStyle config) $
-    querySelector "#tools .uk-modal-dialog"
-        >>= flip addClass (fromJust $ getToolModalStyle config)
-
-  querySelector "#proc .start-group"
-      >>= setHtml (concat (map renderProcBtn $ getStartProcList config))
-  querySelector "#proc .stop-group"
-      >>= setHtml (concat (map renderProcBtn $ getStopProcList config))
-  querySelector "#proc .restart-group"
-      >>= setHtml (concat (map renderProcBtn $ getRestartProcList config))
-  querySelector "#tools .tool-group"
-      >>= setHtml (concat (map renderToolBtn $ getToolList config))
+program ::  Fay ()
+program = do
+  setAutoSave True
 
   getElementById "new"
       >>= addEventListener "click" newDoc
@@ -357,27 +250,11 @@ program config = do
       >>= addEventListener "click" (uploadFile False)
   getElementById "uploadArchive"
       >>= addEventListener "click" (uploadFile True)
-  getElementById "showProc"
-      >>= addEventListener "click" (const showProc)
-
-  querySelector "#proc .start-group"
-      >>= addEventListener "click" bindStartProc
-  querySelector "#proc .stop-group"
-      >>= addEventListener "click" bindStopProc
-  querySelector "#proc .restart-group"
-      >>= addEventListener "click" bindRestartProc
-
-  getElementById "tools"
-      >>= addEventListener "click" (bindShowToolModal $ getToolList config)
 
   getElementById "run"
       >>= addEventListener "click" (const runCurrentFile)
 
-  getElementById "showTools"
-      >>= addEventListener "click" (const showTools)
-
   loadTree treeNodeAction
 
 main :: Fay ()
-main = do
-  loadConfig program
+main = program

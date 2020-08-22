@@ -11,7 +11,6 @@ module Proc
   ) where
 
 import           Control.Monad                  (forM, unless, when)
-import           Data.Maybe                     (fromMaybe)
 import           System.Directory               (createDirectoryIfMissing,
                                                  doesDirectoryExist,
                                                  doesFileExist,
@@ -25,8 +24,7 @@ import           System.IO                      (IOMode (ReadMode), hFileSize,
 
 import           Data.Aeson                     (ToJSON (..), Value (..),
                                                  encode, object, (.=))
-import qualified Data.ByteString.Lazy           as LB (ByteString, concat,
-                                                       empty, hGetContents,
+import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
                                                        writeFile)
 import           Data.HashMap.Strict            (union)
 import qualified Data.Text                      as T (pack)
@@ -61,8 +59,8 @@ getFileTreeList topdir = do
     let properNames = filter (`notElem` [".", ".."]) names
     forM properNames $ \name -> do
       let path = topdir </> name
-      isDirectory <- doesDirectoryExist path
-      if isDirectory then do
+      isDir <- doesDirectoryExist path
+      if isDir then do
         subTree <- getFileTreeList path
         return $ Directory name subTree
       else do
