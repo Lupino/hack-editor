@@ -34,8 +34,9 @@ import           Data.Aeson                     (ToJSON (..), Value (..),
                                                  encode, object, (.=))
 import           Data.ByteString                (ByteString)
 import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
-                                                       fromStrict, toStrict,
-                                                       writeFile)
+                                                       toStrict, writeFile)
+import qualified Data.ByteString.Lazy.UTF8      as LBU (fromString)
+import qualified Data.ByteString.UTF8           as BU (toString)
 import           Data.HashMap.Strict            (union)
 import           Data.Maybe                     (isNothing)
 import qualified Data.Text                      as T (pack)
@@ -54,9 +55,9 @@ import           System.Exit                    (ExitCode (..))
 import           System.FilePath                (dropFileName, (</>))
 import           System.IO                      (IOMode (ReadMode), hFileSize,
                                                  withFile)
-import           System.Posix.Pty               (Pty, closePty, readPty,
+import           System.Posix.Pty               (Pty, PtyControlCode, closePty,
                                                  resizePty, spawnWithPty,
-                                                 writePty)
+                                                 tryReadPty, writePty)
 import           System.Process                 (ProcessHandle,
                                                  terminateProcess)
 import           System.Process.ByteString.Lazy (readProcessWithExitCode)
@@ -164,8 +165,8 @@ closeTerm (TermHandle h) = do
       terminateProcess ph
       closePty pty
 
-readTerm :: TermHandle -> IO ByteString
-readTerm = callTerm readPty
+readTerm :: TermHandle -> IO (Either [PtyControlCode] ByteString)
+readTerm = callTerm tryReadPty
 
 writeTerm :: TermHandle -> ByteString -> IO ()
 writeTerm h bs = callTerm (flip writePty bs) h
@@ -198,7 +199,8 @@ termServerApp th pendingConn = do
   addThread thread3
 
   forever $ do
-    bs0 <- try $ LB.fromStrict <$> readTerm th
+    bs0 <- try $ readTerm th
     case bs0 of
       Left (_ :: SomeException) -> killThreads
-      Right bs1 -> WS.sendDataMessage conn (WS.Text bs1 Nothing)
+      Right (Left c) -> print c
+      Right (Right bs1) -> WS.sendDataMessage conn (WS.Text (LBU.fromString $ BU.toString bs1) Nothing)

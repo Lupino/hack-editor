@@ -36,6 +36,7 @@ library
                      , process
                      , stm
                      , websockets
+                     , utf8-string
 
                      -- required by fay compiler
                      , fay
