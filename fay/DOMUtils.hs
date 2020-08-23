@@ -18,6 +18,7 @@ module DOMUtils
     getModal,
     showModal,
     hideModal,
+    modalEvent,
     prompt,
     confirm_,
     confirm,
@@ -83,6 +84,14 @@ showModal = ffi "%1['show']()"
 
 hideModal :: Modal -> Fay ()
 hideModal = ffi "%1['hide']()"
+
+modalEvent :: Text -> Fay () -> Fay () -> Fay ()
+modalEvent = ffi "(function (elem, show, hide) {\
+                 \  $(elem).on({\
+                 \    'show.uk.modal': show,\
+                 \    'hide.uk.modal': hide\
+                 \  })\
+                 \})(%1, %2, %3)"
 
 prompt :: Text -> (Text -> Fay ()) -> Fay ()
 prompt msg doPrompt = do

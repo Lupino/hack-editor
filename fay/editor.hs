@@ -245,6 +245,8 @@ program = do
   setAutoSave True
   tm <- newTermManager =<< getModal "#term"
 
+  modalEvent "#term" (return ()) updateTree
+
   windowAddEventListener "beforeunload" $ const (closeTerm tm)
 
   getElementById "new"
