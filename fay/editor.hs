@@ -245,6 +245,8 @@ program = do
   setAutoSave True
   tm <- newTermManager =<< getModal "#term"
 
+  windowAddEventListener "beforeunload" $ const (closeTerm tm)
+
   getElementById "new"
       >>= addEventListener "click" newDoc
   getElementById "delete"

@@ -11,6 +11,7 @@ module DOMUtils
     setHtml,
     setDisplay,
     addEventListener,
+    windowAddEventListener,
     clearEventListeners,
     getEventTargetAttr,
     Modal,
@@ -51,6 +52,9 @@ setDisplay = ffi "(function (val, elem) { elem['style']['display'] = val; return
 
 addEventListener :: Text -> (Event -> Fay a) -> Element ->  Fay Element
 addEventListener = ffi "(function(evt, func, elem) {elem['addEventListener'](evt, func); return elem;})(%1, %2, %3)"
+
+windowAddEventListener :: Text -> (Event -> Fay ()) -> Fay ()
+windowAddEventListener = ffi "(function(evt, func) {window.addEventListener(evt, func);})(%1, %2)"
 
 clearEventListeners :: Element -> Fay Element
 clearEventListeners = ffi "(function(elem) {\
