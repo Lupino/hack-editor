@@ -32,6 +32,11 @@ library
                      , bytestring
                      , process-extras
 
+                     , posix-pty
+                     , process
+                     , stm
+                     , websockets
+
                      -- required by fay compiler
                      , fay
                      , fay-dom
@@ -44,10 +49,10 @@ executable proc
   build-depends:       base
                      , proc
                      , scotty
-                     , data-default-class
                      , streaming-commons
                      , wai
                      , wai-extra
+                     , wai-websockets
                      , network
                      , warp
                      , transformers
@@ -61,6 +66,9 @@ executable proc
                      , zip-archive
                      , directory
                      , http-types
+
+                     , websockets
+                     , unix
   default-language:    Haskell2010
 
 test-suite proc-test

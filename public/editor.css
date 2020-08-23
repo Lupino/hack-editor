@@ -86,3 +86,12 @@ body {
 .tool-group button {
   margin-right: 10px;
 }
+
+#term .uk-modal-dialog {
+  width: calc(100% - 40px);
+  height: calc(100% - 80px);
+}
+
+#terminal-container {
+  height: calc(100% - 65px);
+}

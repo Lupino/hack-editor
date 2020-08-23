@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="/uikit/css/uikit.min.css">
   <link rel="stylesheet" href="/uikit/css/components/notify.min.css">
   <link rel="stylesheet" href="/editor.css">
+  <link href="/xterm/xterm.js/xterm.css" rel="stylesheet" />
+  <script src="/xterm/dist/main.js"></script>
 </head>
 <body>
 
@@ -27,6 +29,7 @@
     <div class="uk-button-group">
       <button class="uk-button uk-button-primary uk-button-small" id="upload">上传</button>
       <button class="uk-button uk-button-primary uk-button-small" id="uploadArchive">上传压缩包</button>
+      <button class="uk-button uk-button-primary uk-button-small" id="openTerm">终端</button>
     </div>
     <span id="save-error"></span>
     <div id="currentPath" class="uk-text-muted"></div>
@@ -73,6 +76,14 @@
         <button class="uk-button uk-button-primary js-modal-ok">确定</button>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="term" class="uk-modal">
+  <div class="uk-modal-dialog">
+    <a class="uk-modal-close uk-close"></a>
+    <div class="uk-modal-header"><h2>终端</h2></div>
+    <div id="terminal-container"></div>
   </div>
 </div>
 

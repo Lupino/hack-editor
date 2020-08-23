@@ -3,24 +3,22 @@
 
 module Main (main) where
 
+import           ACEditor
+import           Data.Maybe (fromJust, fromMaybe, isJust)
 import           Data.Text  (Text, concat, fromString, null, putStrLn, splitOn,
                              (<>))
 import           DOM        (Element, Event, Timer, addClass, clearTimeout,
                              getElementById, removeClass, setTimeout)
+import           DOMUtils
 import           FFI        (ffi)
 import           FilePath   (FilePath, dropFileName, (</>))
+import           FPromise   (catch, then_, toReject, toResolve)
 import           HTTP       (get, put, resolveText)
 import           Prelude    hiding (concat, lines, null, putStrLn, unlines)
 import qualified Prelude    (null)
-
-import           FPromise   (catch, then_, toReject, toResolve)
+import           Proc       (runProc)
 import           RFile      (deleteFile, readFile, saveFile)
-
-import           Data.Maybe (fromJust, fromMaybe, isJust)
-
-import           ACEditor
-import           DOMUtils
-import           Proc
+import           Term       (TermManager, closeTerm, newTermManager, openTerm)
 import           Utils      (canProc, getMode, isTextFile)
 
 
@@ -236,9 +234,16 @@ getProcTarget evt = do
   procs <- getEventTargetAttr "data-proc" evt
   return $ splitOn "," procs
 
+
+showTerm :: TermManager -> Event -> Fay ()
+showTerm tm _ = do
+  getModal "#term" >>= showModal
+  openTerm tm
+
 program ::  Fay ()
 program = do
   setAutoSave True
+  tm <- newTermManager =<< getModal "#term"
 
   getElementById "new"
       >>= addEventListener "click" newDoc
@@ -250,6 +255,8 @@ program = do
       >>= addEventListener "click" (uploadFile False)
   getElementById "uploadArchive"
       >>= addEventListener "click" (uploadFile True)
+  getElementById "openTerm"
+      >>= addEventListener "click" (showTerm tm)
 
   getElementById "run"
       >>= addEventListener "click" (const runCurrentFile)

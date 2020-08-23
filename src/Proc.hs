@@ -1,34 +1,64 @@
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Proc
-  (
-    encodeTreeList,
-    treeListToJSON,
-    getFileTreeList,
-    saveFile,
-    deleteFile,
-    ProcName (..),
-    Proc (..),
-    runProc
+  ( encodeTreeList
+  , treeListToJSON
+  , getFileTreeList
+  , saveFile
+  , deleteFile
+  , ProcName (..)
+  , Proc (..)
+  , runProc
+
+  , newTermHandle
+  , TermHandle
+  , closeTerm
+  , createTerm
+  , readTerm
+  , writeTerm
+  , resizeTerm
+  , termServerApp
   ) where
 
-import           Control.Monad                  (forM, unless, when)
+
+import           Control.Concurrent             (forkIO, killThread, myThreadId)
+import           Control.Concurrent.STM         (TVar, newTVarIO, readTVar,
+                                                 readTVarIO, writeTVar)
+import           Control.Exception              (SomeException, try)
+import           Control.Monad                  (forM, forever, unless, void,
+                                                 when)
+import           Control.Monad.STM              (atomically)
+import           Data.Aeson                     (ToJSON (..), Value (..),
+                                                 encode, object, (.=))
+import           Data.ByteString                (ByteString)
+import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
+                                                       fromStrict, toStrict,
+                                                       writeFile)
+import           Data.HashMap.Strict            (union)
+import           Data.Maybe                     (isNothing)
+import qualified Data.Text                      as T (pack)
+import qualified Network.WebSockets             as WS (DataMessage (..),
+                                                       ServerApp, acceptRequest,
+                                                       receiveDataMessage,
+                                                       sendDataMessage)
+import           Network.WebSockets.Connection  as WS (pingThread)
 import           System.Directory               (createDirectoryIfMissing,
                                                  doesDirectoryExist,
                                                  doesFileExist,
                                                  getDirectoryContents,
                                                  removeDirectoryRecursive,
                                                  removeFile)
+import           System.Exit                    (ExitCode (..))
 import           System.FilePath                (dropFileName, (</>))
-
 import           System.IO                      (IOMode (ReadMode), hFileSize,
                                                  withFile)
-
-import           Data.Aeson                     (ToJSON (..), Value (..),
-                                                 encode, object, (.=))
-import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
-                                                       writeFile)
-import           Data.HashMap.Strict            (union)
-import qualified Data.Text                      as T (pack)
-import           System.Exit                    (ExitCode (..))
+import           System.Posix.Pty               (Pty, closePty, readPty,
+                                                 resizePty, spawnWithPty,
+                                                 writePty)
+import           System.Process                 (ProcessHandle,
+                                                 terminateProcess)
 import           System.Process.ByteString.Lazy (readProcessWithExitCode)
 
 data FileTree = Directory String [FileTree] | FileName String Int | Empty
@@ -101,3 +131,72 @@ runProc (Proc name args) = do
   case code of
     ExitSuccess   -> return (Right out)
     ExitFailure _ -> return (Left err)
+
+newtype TermHandle = TermHandle (TVar (Maybe (Pty, ProcessHandle)))
+
+newTermHandle :: IO TermHandle
+newTermHandle = TermHandle <$> newTVarIO Nothing
+
+createTerm :: TermHandle -> (Int, Int) -> IO ()
+createTerm (TermHandle h) size = do
+  o <- readTVarIO h
+  when (isNothing o) $ do
+    r <- spawnWithPty Nothing True "bash" [] size
+    atomically $ writeTVar h $ Just r
+
+callTerm ::(Pty -> IO a) -> TermHandle -> IO a
+callTerm f (TermHandle h) = do
+  o <- readTVarIO h
+  case o of
+    Nothing       -> error "term is terminate"
+    Just (pty, _) -> f pty
+
+closeTerm :: TermHandle -> IO ()
+closeTerm (TermHandle h) = do
+  o <- atomically $ do
+    o <- readTVar h
+    writeTVar h Nothing
+    return o
+
+  case o of
+    Nothing -> return ()
+    Just (pty, ph) -> do
+      terminateProcess ph
+      closePty pty
+
+readTerm :: TermHandle -> IO ByteString
+readTerm = callTerm readPty
+
+writeTerm :: TermHandle -> ByteString -> IO ()
+writeTerm h bs = callTerm (flip writePty bs) h
+
+resizeTerm :: TermHandle -> (Int, Int) -> IO ()
+resizeTerm h size = callTerm (flip resizePty size) h
+
+termServerApp :: TermHandle -> WS.ServerApp
+termServerApp th pendingConn = do
+  conn <- WS.acceptRequest pendingConn
+  threads <- newTVarIO []
+  let addThread t = atomically $ do
+        xs <- readTVar threads
+        writeTVar threads (t:xs)
+      killThreads = do
+        xs <- readTVarIO threads
+        void . forkIO $ mapM_ killThread xs
+  thread1 <- forkIO $ WS.pingThread conn 30 (return ())
+  addThread thread1
+
+  thread2 <- forkIO $ forever $ do
+    bs0 <- try $ WS.receiveDataMessage conn
+    case bs0 of
+      Left (_ :: SomeException) -> killThreads
+      Right (WS.Text bs _)      -> writeTerm th $ LB.toStrict bs
+      Right (WS.Binary bs)      -> writeTerm th $ LB.toStrict bs
+  addThread thread2
+
+  thread3 <- myThreadId
+  addThread thread3
+
+  forever $ do
+    bs <- LB.fromStrict <$> readTerm th
+    WS.sendDataMessage conn (WS.Text bs Nothing)

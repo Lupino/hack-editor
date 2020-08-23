@@ -45,6 +45,8 @@ extra-deps:
 - fay-base-0.21.1.1
 - language-ecmascript-0.19.1.0
 
+- posix-pty-0.2.2
+
 # Override default flag values for local packages and extra-deps
 flags:
 
