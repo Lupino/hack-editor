@@ -221,6 +221,7 @@ runProcAndShow fn args = void  $ runProc fn args
                                     >>= catch (toReject showResult)
   where showResult :: Text -> Fay ()
         showResult txt = do
+          updateTree
           getElementById "proc-result-message" >>= setHtml txt
           getModal "#proc-result" >>= showModal
 
