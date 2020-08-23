@@ -22,7 +22,8 @@ module DOMUtils
     prompt,
     confirm_,
     confirm,
-    notify
+    notify,
+    saveAs
   ) where
 
 import           Data.Text (Text, fromString)
@@ -132,3 +133,6 @@ confirm msg doConfirm = confirm_ msg doConfirm (return ())
 
 notify :: Text -> Fay ()
 notify = ffi "UIkit['notify'](%1)"
+
+saveAs :: Text -> Fay ()
+saveAs = ffi "(function(fn){saveAs('/api/file' + fn, fn.substr(1))})(%1)"

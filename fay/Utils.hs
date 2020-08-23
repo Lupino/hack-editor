@@ -2,8 +2,7 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module Utils
-  (
-    isTextFile,
+  ( isTextFile,
     isPythonFile,
     isNodeFile,
     getMode,

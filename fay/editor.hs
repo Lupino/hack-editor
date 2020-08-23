@@ -190,7 +190,10 @@ treeNodeAction tn = do
   showCurrentPath currentPath
   setCurrentPath currentPath
   setCurrentDirectory currentDirectory
-  unless (isDir tn) $
+  doResolveReadFile currentPath ""
+  if (isDir tn) then getElementById "download" >>= setProp "disabled" "disabled"
+  else getElementById "download" >>= removeProp "disabled"
+  when (not (isDir tn) && isTextFile currentPath) $
     void $ readFile currentPath
               >>= then_ (toResolve $ doResolveReadFile currentPath)
               >>= catch (toReject print)
@@ -237,6 +240,11 @@ showTerm tm _ = do
   getModal "#term" >>= showModal
   openTerm tm
 
+download :: Event -> Fay ()
+download _ = do
+  currentPath <- getCurrentPath
+  saveAs currentPath
+
 program ::  Fay ()
 program = do
   setAutoSave True
@@ -261,6 +269,9 @@ program = do
 
   getElementById "run"
       >>= addEventListener "click" (const runCurrentFile)
+
+  getElementById "download"
+      >>= addEventListener "click" download
 
   loadTree treeNodeAction
 
