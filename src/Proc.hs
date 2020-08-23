@@ -198,5 +198,7 @@ termServerApp th pendingConn = do
   addThread thread3
 
   forever $ do
-    bs <- LB.fromStrict <$> readTerm th
-    WS.sendDataMessage conn (WS.Text bs Nothing)
+    bs0 <- try $ LB.fromStrict <$> readTerm th
+    case bs0 of
+      Left (_ :: SomeException) -> killThreads
+      Right bs1 -> WS.sendDataMessage conn (WS.Text bs1 Nothing)
