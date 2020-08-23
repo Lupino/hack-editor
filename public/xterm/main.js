@@ -28,7 +28,11 @@ Terminal.applyAddon(winptyCompat);
       this.app = app;
 
       this.init = function(){
-        this.createTerminal();
+        if (connected) {
+          term.fit()
+        } else {
+          this.createTerminal();
+        }
       }
 
       this.isFocused = function(){
@@ -42,9 +46,6 @@ Terminal.applyAddon(winptyCompat);
       }
 
       this.createTerminal = function(){
-        if (connected) {
-          return;
-        }
 
         // Clean terminal
         while (terminalContainer.children.length) {
