@@ -87,16 +87,12 @@ getCurrentDirectory = ffi "window['currentDirectory']"
 setCurrentDirectory :: FilePath -> Fay ()
 setCurrentDirectory = ffi "(function(p){window['currentDirectory'] = p })(%1)"
 
-saveErrorElem :: Fay Element
-saveErrorElem = getElementById "save-error"
-
 isUnsave :: SaveState -> Bool
 isUnsave Unsave = True
 isUnsave _      = False
 
 saveCurrent :: Fay ()
 saveCurrent = do
-  saveErrorElem >>= setHtml ""
   currentPath <- getCurrentPath
   saveState <- getSaveState
 

@@ -15,29 +15,30 @@
   <link rel="stylesheet" href="/editor.css">
   <link href="/xterm/xterm.js/xterm.css" rel="stylesheet" />
   <script src="/xterm/dist/main.js"></script>
+  <script src="/FileSaver.js"></script>
 </head>
 <body>
 
 <div id="sidebar">
-  <div id="status">
-    <div class="uk-button-group">
-      <button class="uk-button uk-button-primary uk-button-small" id="run" disabled>执行</button>
-      <button class="uk-button uk-button-primary uk-button-small" id="new">新建</button>
-      <button class="uk-button uk-button-primary uk-button-small" id="delete">删除</button>
-      <button class="uk-button uk-button-primary uk-button-small" id="save" disabled>已保存</button>
-    </div>
-    <div class="uk-button-group">
-      <button class="uk-button uk-button-primary uk-button-small" id="upload">上传</button>
-      <button class="uk-button uk-button-primary uk-button-small" id="uploadArchive">上传压缩包</button>
-      <button class="uk-button uk-button-primary uk-button-small" id="openTerm">终端</button>
-    </div>
-    <span id="save-error"></span>
-    <div id="currentPath" class="uk-text-muted"></div>
-  </div>
+  <div id="status"></div>
   <div id="tree"></div>
 </div>
 
 <div id="main">
+  <nav class="uk-navbar">
+    <div id="currentPath" class="uk-navbar-content"> </div>
+    <div class="uk-navbar-content uk-navbar-flip  uk-hidden-small">
+      <div class="uk-button-group">
+        <button class="uk-button uk-button-primary uk-button-small" id="upload">上传</button>
+        <button class="uk-button uk-button-primary uk-button-small" id="uploadArchive">上传压缩包</button>
+        <button class="uk-button uk-button-primary uk-button-small" id="new">新建</button>
+        <button class="uk-button uk-button-danger uk-button-small" id="delete">删除</button>
+        <button class="uk-button uk-button-primary uk-button-small" id="save" disabled>已保存</button>
+        <button class="uk-button uk-button-primary uk-button-small" id="run" disabled>执行</button>
+        <button class="uk-button uk-button-primary uk-button-small" id="openTerm">终端</button>
+      </div>
+    </div>
+  </nav>
   <div id="editor" class="uninitialized"></div>
 </div>
 
