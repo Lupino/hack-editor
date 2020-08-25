@@ -96,11 +96,11 @@ modalEvent = ffi "(function (elem, show, hide) {\
 
 prompt :: Text -> (Text -> Fay ()) -> Fay ()
 prompt msg doPrompt = do
-  querySelector "#modal-prompt" >>= clearEventListeners
+  void $ querySelector "#modal-prompt" >>= clearEventListeners
 
-  querySelector "#modal-prompt .prompt" >>= setHtml msg
-  querySelector "#modal-prompt input" >>= setProp "value" ""
-  querySelector "#modal-prompt .js-modal-ok"
+  void $ querySelector "#modal-prompt .prompt" >>= setHtml msg
+  void $ querySelector "#modal-prompt input" >>= setProp "value" ""
+  void $ querySelector "#modal-prompt .js-modal-ok"
       >>= addEventListener "click" (const doPrompt')
       >>= addEventListener "click" (const hide)
 
@@ -113,14 +113,14 @@ prompt msg doPrompt = do
 
 confirm_ :: Text -> Fay () -> Fay () -> Fay ()
 confirm_ msg doConfirm doCancel = do
-  querySelector "#modal-confirm" >>= clearEventListeners
+  void $ querySelector "#modal-confirm" >>= clearEventListeners
 
-  querySelector "#modal-confirm .uk-modal-content" >>= setHtml msg
-  querySelector "#modal-confirm .modal-confirm-cancel"
+  void $ querySelector "#modal-confirm .uk-modal-content" >>= setHtml msg
+  void $ querySelector "#modal-confirm .modal-confirm-cancel"
       >>= addEventListener "click" (const doCancel)
       >>= addEventListener "click" (const hide)
 
-  querySelector "#modal-confirm .modal-confirm"
+  void $ querySelector "#modal-confirm .modal-confirm"
       >>= addEventListener "click" (const doConfirm)
       >>= addEventListener "click" (const hide)
 

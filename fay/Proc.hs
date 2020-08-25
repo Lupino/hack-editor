@@ -6,13 +6,10 @@ module Proc
   ) where
 
 import           Data.Text (Text, fromString, pack)
-import           FFI       (ffi)
 import           FilePath  (FilePath, (</>))
-import           FPromise  (Promise, Reject, Resolve, catch, fromResolve,
-                            newPromise, resolve, then_, toReject, toResolve)
+import           FPromise  (Promise, then_)
 import           HTTP      (post, resolveText)
 import           Prelude
-import           RFile     (readFile, saveFile)
 import           Utils     (isNodeFile, isPythonFile)
 
 

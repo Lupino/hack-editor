@@ -4,22 +4,19 @@
 module Main (main) where
 
 import           ACEditor
-import           Data.Maybe (fromJust, fromMaybe, isJust)
-import           Data.Text  (Text, concat, fromString, null, putStrLn, splitOn,
-                             (<>))
-import           DOM        (Element, Event, Timer, addClass, clearTimeout,
-                             getElementById, removeClass, setTimeout)
+import           Data.Text (Text, fromString, null, putStrLn, (<>))
+import           DOM       (Element, Event, Timer, clearTimeout, getElementById,
+                            removeClass, setTimeout)
 import           DOMUtils
-import           FFI        (ffi)
-import           FilePath   (FilePath, dropFileName, (</>))
-import           FPromise   (catch, then_, toReject, toResolve)
-import           HTTP       (get, put, resolveText)
-import           Prelude    hiding (concat, lines, null, putStrLn, unlines)
-import qualified Prelude    (null)
-import           Proc       (runProc)
-import           RFile      (deleteFile, readFile, saveFile)
-import           Term       (TermManager, closeTerm, newTermManager, openTerm)
-import           Utils      (canProc, getMode, isTextFile)
+import           FFI       (ffi)
+import           FilePath  (FilePath, dropFileName, (</>))
+import           FPromise  (catch, then_, toReject, toResolve)
+import           HTTP      (get, put, resolveText)
+import           Prelude   hiding (concat, lines, null, putStrLn, unlines)
+import           Proc      (runProc)
+import           RFile     (deleteFile, readFile, saveFile)
+import           Term      (TermManager, closeTerm, newTermManager, openTerm)
+import           Utils     (canProc, getMode, isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
@@ -50,26 +47,25 @@ saved = do
   st <- getSaveState
   case st of
     Saving -> do
-      saveBtn >>= setHtml "已保存"
+      void $ saveBtn >>= setHtml "已保存"
       setSaveState Saved
     _ -> return ()
 
 saving :: Fay ()
 saving = do
-  saveBtn >>= setProp "disabled" "disabled" >>= setHtml "保存..."
+  void $ saveBtn >>= setProp "disabled" "disabled" >>= setHtml "保存..."
   setSaveState Saving
 
 unsaved :: Fay ()
 unsaved = do
   setSaveState Unsave
-  saveBtn >>= removeProp "disabled" >>= setHtml "保存"
+  void $ saveBtn >>= removeProp "disabled" >>= setHtml "保存"
 
   autosave <- getAutoSave
   when autosave $ do
     t <- getTimer
     clearTimeout t
-    setTimeout 1000 save
-    return ()
+    void $ setTimeout 1000 save
   where save :: Timer -> Fay ()
         save t = do
           setTimer t
@@ -126,10 +122,10 @@ deleteDoc _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ deleteFile currentPath
-                >>= then_ (toResolve $ const updateTree)
+                >>= then_ (toResolve $ const (updateTree >> doResolveReadFile "" "" >> showCurrentPath ""))
                 >>= catch (toReject putStrLn)
 
-data TreeNode = TreeNode { isDir :: Bool, serverPath :: Text, text :: Text }
+data TreeNode = TreeNode { isDir :: Bool, serverPath :: Text }
 
 initTree :: Text -> (TreeNode -> Fay ()) -> Fay ()
 initTree = ffi "initTree(%1, %2)"
@@ -145,7 +141,7 @@ updateTree = do
 loadTree :: (TreeNode -> Fay ()) -> Fay ()
 loadTree act = void $ get "/api/file"
                           >>= then_ resolveText
-                          >>= then_ (toResolve (flip initTree act))
+                          >>= then_ (toResolve (`initTree` act))
 
 getEditor :: Fay Editor
 getEditor = ffi "window['editor']"
@@ -165,25 +161,24 @@ initEditor = do
   if isInitialized then getEditor
   else do
     newEditor "editor" >>= setTheme "chrome" >>= setEditor
-    getElementById "editor" >>= flip removeClass "uninitialized"
+    void $ getElementById "editor" >>= flip removeClass "uninitialized"
     setIsEditorInitialized
     getEditor
 
 doResolveReadFile :: FilePath -> Text -> Fay ()
 doResolveReadFile fn body = do
-  initEditor
+  void $ initEditor
            >>= removeAllEvent "change"
            >>= setValue body
            >>= setMode (getMode fn)
-  if (canProc fn) then getElementById "run" >>= removeProp "disabled"
-  else getElementById "run" >>= setProp "disabled" "disabled"
+  if canProc fn then void $ getElementById "run" >>= removeProp "disabled"
+  else void $ getElementById "run" >>= setProp "disabled" "disabled"
 
   when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const unsaved)
 
 showCurrentPath :: FilePath -> Fay ()
-showCurrentPath path = do
-  getElementById "currentPath" >>= setHtml path
-  return ()
+showCurrentPath path =
+  void $ getElementById "currentPath" >>= setHtml path
 
 treeNodeAction :: TreeNode -> Fay ()
 treeNodeAction tn = do
@@ -191,8 +186,8 @@ treeNodeAction tn = do
   setCurrentPath currentPath
   setCurrentDirectory currentDirectory
   doResolveReadFile currentPath ""
-  if (isDir tn) then getElementById "download" >>= setProp "disabled" "disabled"
-  else getElementById "download" >>= removeProp "disabled"
+  if isDir tn then void $ getElementById "download" >>= setProp "disabled" "disabled"
+  else void $ getElementById "download" >>= removeProp "disabled"
   when (not (isDir tn) && isTextFile currentPath) $
     void $ readFile currentPath
               >>= then_ (toResolve $ doResolveReadFile currentPath)
@@ -221,19 +216,13 @@ runProcAndShow fn args = void  $ runProc fn args
   where showResult :: Text -> Fay ()
         showResult txt = do
           updateTree
-          getElementById "proc-result-message" >>= setHtml txt
+          void $ getElementById "proc-result-message" >>= setHtml txt
           getModal "#proc-result" >>= showModal
 
 runCurrentFile :: Fay ()
 runCurrentFile = do
   currentPath <- getCurrentPath
   runProcAndShow currentPath []
-
-getProcTarget :: Event -> Fay [Text]
-getProcTarget evt = do
-  procs <- getEventTargetAttr "data-proc" evt
-  return $ splitOn "," procs
-
 
 showTerm :: TermManager -> Event -> Fay ()
 showTerm tm _ = do
@@ -254,23 +243,23 @@ program = do
 
   windowAddEventListener "beforeunload" $ const (closeTerm tm)
 
-  getElementById "new"
+  void $ getElementById "new"
       >>= addEventListener "click" newDoc
-  getElementById "delete"
+  void $ getElementById "delete"
       >>= addEventListener "click" deleteDoc
-  saveBtn
+  void $ saveBtn
       >>= addEventListener "click" (const saveCurrent)
-  getElementById "upload"
+  void $ getElementById "upload"
       >>= addEventListener "click" (uploadFile False)
-  getElementById "uploadArchive"
+  void $ getElementById "uploadArchive"
       >>= addEventListener "click" (uploadFile True)
-  getElementById "openTerm"
+  void $ getElementById "openTerm"
       >>= addEventListener "click" (showTerm tm)
 
-  getElementById "run"
+  void $ getElementById "run"
       >>= addEventListener "click" (const runCurrentFile)
 
-  getElementById "download"
+  void $ getElementById "download"
       >>= addEventListener "click" download
 
   loadTree treeNodeAction

@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Proc
@@ -169,10 +168,10 @@ readTerm :: TermHandle -> IO (Either [PtyControlCode] ByteString)
 readTerm = callTerm tryReadPty
 
 writeTerm :: TermHandle -> ByteString -> IO ()
-writeTerm h bs = callTerm (flip writePty bs) h
+writeTerm h bs = callTerm (`writePty` bs) h
 
 resizeTerm :: TermHandle -> (Int, Int) -> IO ()
-resizeTerm h size = callTerm (flip resizePty size) h
+resizeTerm h size = callTerm (`resizePty` size) h
 
 termServerApp :: TermHandle -> WS.ServerApp
 termServerApp th pendingConn = do

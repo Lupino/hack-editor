@@ -29,10 +29,10 @@ newtype Reject = Reject (Text -> Fay ())
 newtype Resolve a b = Resolve (a -> Fay b)
 
 fromReject :: Reject -> Text -> Fay ()
-fromReject (Reject f) g = f g
+fromReject (Reject f) = f
 
 fromResolve :: Resolve a b -> a -> Fay b
-fromResolve (Resolve f) g = f g
+fromResolve (Resolve f) = f
 
 toReject :: (Text -> Fay ()) -> Reject
 toReject = Reject
