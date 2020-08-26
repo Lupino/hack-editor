@@ -54,3 +54,7 @@ function selectFile(callback) {
   // Trigger file selector (only works on newer browsers...)
   input.click();
 }
+
+function isTextFile(fileName) {
+ return /\.(json|js|html|markdown|md|rst|css|htm|xml|txt|py|csv|log|sh|sql)$/i.test(fileName);
+}
