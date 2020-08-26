@@ -104,7 +104,7 @@ saveCurrent api = do
 newDoc :: ProcAPI -> Event -> Fay ()
 newDoc api _ = do
   saveCurrent api
-  prompt "输入文件名" $ \fn -> do
+  prompt "输入文件名" "" $ \fn -> do
     currentDirectory <- getCurrentDirectory
 
     let path = currentDirectory </> fn
@@ -186,8 +186,7 @@ showCurrentPath isdir path = do
   void $ getElementById "currentPath" >>= setHtml path
   setCurrentPath path
   setCurrentDirectory dir
-  enableElem "download" isdir
-  void $ initEditor >>= setValue ""
+  enableElem "download" $ not isdir
 
   where dir = if isdir
                  then path
@@ -197,11 +196,12 @@ treeNodeAction :: ProcAPI -> TreeNode -> Fay ()
 treeNodeAction api tn = do
   showCurrentPath (isDir tn) currentPath
 
-  when (not (isDir tn) && isTextFile currentPath) $
+  if not (isDir tn) && isTextFile currentPath then
     void $ API.readFile api currentPath
               >>= then_ (toResolve $ doResolveReadFile api currentPath)
               >>= catch (toReject print)
 
+  else doResolveReadFile api currentPath ""
   where currentPath = serverPath tn
 
 
@@ -243,9 +243,34 @@ download _ = do
   currentPath <- getCurrentPath
   saveAs currentPath
 
-program ::  Fay ()
-program = do
-  api <- newProcAPI "term" "term"
+getKeyFromLocation :: Fay Text
+getKeyFromLocation = ffi "/key=([^&]+)/.exec(location.search)[1]"
+
+getSecret_ :: Maybe Text -> (Text -> Maybe Text) -> Text -> Fay (Maybe Text)
+getSecret_ = ffi "(function(nothing, just, key) { var v = localStorage.getItem(key); if (v) {return just(v)} else {return nothing} })(%1, %2, %3)"
+
+getSecret :: Text -> Fay (Maybe Text)
+getSecret = getSecret_ Nothing Just
+
+setSecret :: Text -> Text -> Fay ()
+setSecret = ffi "localStorage.setItem(%1, %2)"
+
+resetSecret :: Text -> Text -> Fay ()
+resetSecret sec = prompt "请输入新密钥" sec . setSecret
+
+prepareSecrect :: Text -> (Text -> Fay ()) -> Fay ()
+prepareSecrect key next = do
+  msec <- getSecret key
+  case msec of
+    Nothing ->
+      prompt "请输入密钥" "" $ \sec -> do
+        setSecret key sec
+        next sec
+    Just sec -> next sec
+
+program :: Text -> Text -> Fay ()
+program key sec = do
+  api <- newProcAPI key sec
   tm <- newTermManager "#terminal-container" api =<< getModal "#term"
 
   setAutoSave True
@@ -272,7 +297,12 @@ program = do
   void $ getElementById "download"
       >>= addEventListener "click" download
 
+  void $ getElementById "resetSecret"
+      >>= addEventListener "click" (const $ resetSecret sec key)
+
   loadTree api
 
 main :: Fay ()
-main = program
+main = do
+  key <- getKeyFromLocation
+  prepareSecrect key $ program key

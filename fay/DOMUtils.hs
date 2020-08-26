@@ -94,12 +94,12 @@ modalEvent = ffi "(function (elem, show, hide) {\
                  \  })\
                  \})(%1, %2, %3)"
 
-prompt :: Text -> (Text -> Fay ()) -> Fay ()
-prompt msg doPrompt = do
+prompt :: Text -> Text -> (Text -> Fay ()) -> Fay ()
+prompt msg val doPrompt = do
   void $ querySelector "#modal-prompt" >>= clearEventListeners
 
   void $ querySelector "#modal-prompt .prompt" >>= setHtml msg
-  void $ querySelector "#modal-prompt input" >>= setProp "value" ""
+  void $ querySelector "#modal-prompt input" >>= setProp "value" val
   void $ querySelector "#modal-prompt .js-modal-ok"
       >>= addEventListener "click" (const doPrompt')
       >>= addEventListener "click" (const hide)
