@@ -1,9 +1,10 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LC_ALL=C
 
 RUN apt-get update && \
-    apt-get install -y git curl pkg-config libncurses5-dev libpcre3-dev
+    apt-get install -y git curl pkg-config libncurses5-dev libpcre3-dev locales
 
 RUN curl -sSL https://get.haskellstack.org/ | sh
 
@@ -17,7 +18,10 @@ FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y ca-certificates curl wget python3 && mkdir -p /data
+RUN apt-get update && \
+    apt-get install -y ca-certificates curl wget python3 locales python3-pip git && \
+    pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn && \
+    mkdir -p /data
 
 COPY --from=0 /data/bin/* /usr/bin/
 COPY --from=0 /data/public /app
