@@ -196,6 +196,7 @@ showCurrentPath isdir path = do
   setCurrentPath path
   setCurrentDirectory dir
   enableElem "download" $ not isdir
+  enableElem "downloadLink" $ not isdir
   enableElem "delete" $ not $ null path
   enableElem "run" $ canProc path
 
@@ -254,6 +255,18 @@ download api _ = do
   currentPath <- getCurrentPath
   void $ signFilePath api currentPath
     >>= then_ (toResolve (saveAs currentPath))
+    >>= catch (toReject print)
+
+downloadLink :: ProcAPI -> Event -> Fay ()
+downloadLink api _ = do
+  currentPath <- getCurrentPath
+  void $ signFilePath api currentPath
+    >>= then_ (toResolve showResult)
+    >>= catch (toReject print)
+  where showResult :: Text -> Fay ()
+        showResult txt = do
+          prompt "下载地址" txt $ const $ return ()
+
 
 getKeyFromLocation :: Fay Text
 getKeyFromLocation = ffi "/key=([^&]+)/.exec(location.search)[1]"
@@ -308,6 +321,9 @@ program key sec = do
 
   void $ getElementById "download"
       >>= addEventListener "click" (download api)
+
+  void $ getElementById "downloadLink"
+      >>= addEventListener "click" (downloadLink api)
 
   void $ getElementById "resetSecret"
       >>= addEventListener "click" (const $ resetSecret sec key)
