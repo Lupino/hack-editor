@@ -12,7 +12,7 @@ import           FFI         (ffi)
 import           FilePath    (FilePath, dropFileName, (</>))
 import           FPromise    (catch, then_, toReject, toResolve)
 import           Prelude     hiding (concat, lines, null, putStrLn, unlines)
-import           ProcAPI     (ProcAPI, loadFileTree, newProcAPI)
+import           ProcAPI     (ProcAPI, loadFileTree, newProcAPI, signFilePath)
 import qualified ProcAPI     as API (readFile, removeFile, runFile,
                                      uploadArchive, uploadFile, writeFile)
 import           TermManager (TermManager, closeTerm, newTermManager, openTerm)
@@ -238,10 +238,11 @@ showTerm tm _ = do
   getModal "#term" >>= showModal
   openTerm tm
 
-download :: Event -> Fay ()
-download _ = do
+download :: ProcAPI -> Event -> Fay ()
+download api _ = do
   currentPath <- getCurrentPath
-  saveAs currentPath
+  void $ signFilePath api currentPath
+    >>= then_ (toResolve (saveAs currentPath))
 
 getKeyFromLocation :: Fay Text
 getKeyFromLocation = ffi "/key=([^&]+)/.exec(location.search)[1]"
@@ -295,7 +296,7 @@ program key sec = do
       >>= addEventListener "click" (const $ runCurrentFile api)
 
   void $ getElementById "download"
-      >>= addEventListener "click" download
+      >>= addEventListener "click" (download api)
 
   void $ getElementById "resetSecret"
       >>= addEventListener "click" (const $ resetSecret sec key)

@@ -12,6 +12,7 @@ module ProcAPI
   , closeTerm
   , loadFileTree
   , signWSPath
+  , signFilePath
   ) where
 
 import           Data.Text (Text, pack)
@@ -60,3 +61,6 @@ loadFileTree = ffi "%1['loadFileTree']()"
 
 signWSPath :: ProcAPI -> FilePath -> Fay Promise
 signWSPath = ffi "%1['signWSPath'](%2)"
+
+signFilePath :: ProcAPI -> FilePath -> Fay Promise
+signFilePath = ffi "%1['signFilePath'](%2)"

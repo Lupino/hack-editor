@@ -56,7 +56,7 @@ class ProcApi extends Gateway {
     return this.request({pathname, method: 'POST', raw}).then((rsp) => rsp.text())
   }
 
-  async signWSPath(pathname) {
+  async signPathName(method, pathname) {
     const signData = {
       'key': this.key,
       'pathname': pathname
@@ -67,7 +67,7 @@ class ProcApi extends Gateway {
     query.key = this.key;
 
     if (this.signSecret) {
-      const {nonce, secret: secret_, timestamp} = await this.getSecret('WSPROXY',
+      const {nonce, secret: secret_, timestamp} = await this.getSecret(method,
         pathname);
       query.type = 'JSAPI';
       query.nonce = nonce;
@@ -79,7 +79,18 @@ class ProcApi extends Gateway {
 
     query.timestamp = signData.timestamp
     query.sign = this.signParam(secret, signData)
-    return self.socketURL + pathname + '?' + qs.stringify(query);
+    return pathname + '?' + qs.stringify(query);
+  }
+
+  async signWSPath(pathname) {
+    const path = await this.signPathName('WSPROXY', pathname);
+    return self.socketURL + path;
+  }
+
+  async signFilePath(fileName) {
+    const pathname = `/api/file${fileName}`;
+    const path = await this.signPathName('GET', pathname);
+    return this.host + path;
   }
 }
 

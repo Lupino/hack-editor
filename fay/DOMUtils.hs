@@ -134,5 +134,5 @@ confirm msg doConfirm = confirm_ msg doConfirm (return ())
 notify :: Text -> Fay ()
 notify = ffi "UIkit['notify'](%1)"
 
-saveAs :: Text -> Fay ()
-saveAs = ffi "(function(fn){saveAs('/api/file' + fn, fn.substr(1))})(%1)"
+saveAs :: Text -> Text -> Fay ()
+saveAs = ffi "saveAs(%2, %1['substr'](1))"
