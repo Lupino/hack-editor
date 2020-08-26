@@ -230,6 +230,7 @@ uploadFile api isArc _ = selectFile action
           currentDirectory <- getCurrentDirectory
           void $ doUpload api (currentDirectory </> name) dat
                      >>= then_ (toResolve $ const $ updateTree api)
+                     >>= catch (toReject print)
         doUpload = if isArc then API.uploadArchive else API.uploadFile
 
 runProcAndShow :: ProcAPI -> FilePath -> [Text] -> Fay ()
