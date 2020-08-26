@@ -122,7 +122,7 @@ deleteDoc api _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ API.removeFile api currentPath
-                >>= then_ (toResolve $ const (updateTree api >> doResolveReadFile api "" "" >> showCurrentPath ""))
+                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False ""))
                 >>= catch (toReject putStrLn)
 
 data TreeNode = TreeNode { isDir :: Bool, serverPath :: Text }
@@ -166,37 +166,44 @@ initEditor = do
     setIsEditorInitialized
     getEditor
 
+enableElem :: Text -> Bool -> Fay ()
+enableElem el True = void $ getElementById el >>= removeProp "disabled"
+enableElem el False = void $ getElementById el >>= setProp "disabled" "disabled"
+
 doResolveReadFile :: ProcAPI -> FilePath -> Text -> Fay ()
 doResolveReadFile api fn body = do
   void $ initEditor
            >>= removeAllEvent "change"
            >>= setValue body
            >>= setMode (getMode fn)
-  if canProc fn then void $ getElementById "run" >>= removeProp "disabled"
-  else void $ getElementById "run" >>= setProp "disabled" "disabled"
+
+  enableElem "run" $ canProc fn
 
   when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const $ unsaved api)
 
-showCurrentPath :: FilePath -> Fay ()
-showCurrentPath path =
+showCurrentPath :: Bool -> FilePath -> Fay ()
+showCurrentPath isdir path = do
   void $ getElementById "currentPath" >>= setHtml path
+  setCurrentPath path
+  setCurrentDirectory dir
+  enableElem "download" isdir
+  void $ initEditor >>= setValue ""
+
+  where dir = if isdir
+                 then path
+                 else dropFileName path
 
 treeNodeAction :: ProcAPI -> TreeNode -> Fay ()
 treeNodeAction api tn = do
-  showCurrentPath currentPath
-  setCurrentPath currentPath
-  setCurrentDirectory currentDirectory
-  doResolveReadFile api currentPath ""
-  if isDir tn then void $ getElementById "download" >>= setProp "disabled" "disabled"
-  else void $ getElementById "download" >>= removeProp "disabled"
+  showCurrentPath (isDir tn) currentPath
+
   when (not (isDir tn) && isTextFile currentPath) $
     void $ API.readFile api currentPath
               >>= then_ (toResolve $ doResolveReadFile api currentPath)
               >>= catch (toReject print)
 
   where currentPath = serverPath tn
-        currentDirectory = if isDir tn then currentPath
-                           else dropFileName currentPath
+
 
 selectFile :: (Text -> Text -> Fay ()) -> Fay ()
 selectFile = ffi "selectFile(%1)"
