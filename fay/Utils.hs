@@ -8,6 +8,7 @@ module Utils
   ) where
 
 import           Data.Text (Text, fromString)
+import           FFI       (ffi)
 import           FilePath  (FilePath)
 import           Prelude   (Bool, otherwise)
 import           Regex     (Flag (I), Regex, newRegex_, test)
