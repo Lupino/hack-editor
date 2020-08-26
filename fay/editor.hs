@@ -5,7 +5,7 @@ module Main (main) where
 
 import           ACEditor
 import           Data.Text   (Text, fromString, null, putStrLn, (<>))
-import           DOM         (Element, Event, Timer, clearTimeout,
+import           DOM         (Element, Event, Timer, addClass, clearTimeout,
                               getElementById, removeClass, setTimeout)
 import           DOMUtils
 import           FFI         (ffi)
@@ -122,7 +122,7 @@ deleteDoc api _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ API.removeFile api currentPath
-                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> doResolveReadFile "" ""))
+                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> setEditorData "none" ""))
                 >>= catch (toReject putStrLn)
 
 data TreeNode
@@ -168,7 +168,6 @@ initEditor = do
   if isInitialized then getEditor
   else do
     newEditor "editor" >>= setTheme "chrome" >>= setEditor
-    void $ getElementById "editor" >>= flip removeClass "uninitialized"
     setIsEditorInitialized
     getEditor
 
@@ -176,12 +175,16 @@ enableElem :: Text -> Bool -> Fay ()
 enableElem el True = void $ getElementById el >>= removeProp "disabled"
 enableElem el False = void $ getElementById el >>= setProp "disabled" "disabled"
 
-doResolveReadFile :: FilePath -> Text -> Fay ()
-doResolveReadFile fn body = do
+setEditorData :: Text -> Text -> Fay ()
+setEditorData mode body = do
   void $ initEditor
            >>= removeAllEvent "change"
            >>= setValue body
-           >>= setMode (getMode fn)
+           >>= setMode mode
+
+  el <- getElementById "editor"
+  if null body then void $ addClass el "uninitialized"
+               else void $ removeClass el "uninitialized"
 
 addChangeEvent :: ProcAPI -> Fay ()
 addChangeEvent api =

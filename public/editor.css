@@ -10,6 +10,7 @@ body {
   right: 0;
   bottom: 0;
   overflow: hidden;
+  background-color: #ebebeb;
 }
 
 #editor {
@@ -25,7 +26,7 @@ body {
 }
 
 #editor.uninitialized {
-  background-color: #ebebeb;
+  opacity: 0;
 }
 
 #sidebar {
