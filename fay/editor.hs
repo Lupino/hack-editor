@@ -122,10 +122,16 @@ deleteDoc api _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ API.removeFile api currentPath
-                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False ""))
+                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> doResolveReadFile "" ""))
                 >>= catch (toReject putStrLn)
 
-data TreeNode = TreeNode { isDir :: Bool, serverPath :: Text }
+data TreeNode
+
+isDir :: TreeNode -> Bool
+isDir = ffi "%1['isDir']"
+
+serverPath :: TreeNode -> Text
+serverPath = ffi "%1['serverPath']"
 
 initTree :: Text -> (TreeNode -> Fay ()) -> Fay ()
 initTree = ffi "initTree(%1, %2)"
@@ -170,16 +176,16 @@ enableElem :: Text -> Bool -> Fay ()
 enableElem el True = void $ getElementById el >>= removeProp "disabled"
 enableElem el False = void $ getElementById el >>= setProp "disabled" "disabled"
 
-doResolveReadFile :: ProcAPI -> FilePath -> Text -> Fay ()
-doResolveReadFile api fn body = do
+doResolveReadFile :: FilePath -> Text -> Fay ()
+doResolveReadFile fn body = do
   void $ initEditor
            >>= removeAllEvent "change"
            >>= setValue body
            >>= setMode (getMode fn)
 
-  enableElem "run" $ canProc fn
-
-  when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const $ unsaved api)
+addChangeEvent :: ProcAPI -> Fay ()
+addChangeEvent api =
+  void $ getEditor >>= addEvent "change" (const $ unsaved api)
 
 showCurrentPath :: Bool -> FilePath -> Fay ()
 showCurrentPath isdir path = do
@@ -187,6 +193,8 @@ showCurrentPath isdir path = do
   setCurrentPath path
   setCurrentDirectory dir
   enableElem "download" $ not isdir
+  enableElem "delete" $ not $ null path
+  enableElem "run" $ canProc path
 
   where dir = if isdir
                  then path
@@ -198,10 +206,10 @@ treeNodeAction api tn = do
 
   if not (isDir tn) && isTextFile currentPath then
     void $ API.readFile api currentPath
-              >>= then_ (toResolve $ doResolveReadFile api currentPath)
+              >>= then_ (toResolve $ doResolveReadFile currentPath >> addChangeEvent api)
               >>= catch (toReject print)
 
-  else doResolveReadFile api currentPath ""
+  else doResolveReadFile currentPath ""
   where currentPath = serverPath tn
 
 
