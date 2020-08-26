@@ -5,6 +5,8 @@ import           Codec.Archive.Zip                    (ZipOption (..),
                                                        extractFilesFromArchive,
                                                        toArchive)
 import           Control.Monad.IO.Class               (liftIO)
+import           Data.Aeson                           (object, (.=))
+import           Data.ByteString.Base64.Lazy          (decodeLenient)
 import qualified Data.ByteString.Char8                as BC (unpack)
 import qualified Data.ByteString.Lazy.Char8           as BL (readFile, unpack)
 import           Data.List                            (isPrefixOf)
@@ -93,10 +95,7 @@ application th procRoot workRoot = do
   middleware staticMid
   middleware staticMid'
 
-  get "/" $ do
-    hasEditor <- liftIO $ doesFileExist editor
-    if hasEditor then redirect "/editor/index.html"
-    else redirect "/index.html"
+  get "/" $ redirect "/index.html"
 
   get "/api/file" $ do
     trees <- liftIO $ getFileTreeList workRoot
@@ -117,21 +116,26 @@ application th procRoot workRoot = do
     path <- filePath workRoot
     wb <- body
     liftIO $ saveFile path wb
+    resultOK
 
-    text "OK"
 
-  put (textRoute [ "api", "archive" ]) $ do
+  put (textRoute [ "api", "upload" ]) $ do
     path <- filePath workRoot
-    wb <- body
-    liftIO $ extractFilesFromArchive [OptDestination (dropFileName path)] $ toArchive wb
+    wb <- decodeLenient <$> body
+    liftIO $ saveFile path wb
+    resultOK
 
-    text "OK"
+
+  put (textRoute [ "api", "uploadArchive" ]) $ do
+    path <- filePath workRoot
+    wb <- decodeLenient <$> body
+    liftIO $ extractFilesFromArchive [OptDestination (dropFileName path)] $ toArchive wb
+    resultOK
 
   delete (textRoute [ "api", "file" ]) $ do
     path <- filePath workRoot
     liftIO $ deleteFile path
-
-    text "OK"
+    resultOK
 
   post (textRoute [ "api", "python" ]) $ runProc_ workRoot Python
   post (textRoute [ "api", "node" ])   $ runProc_ workRoot Node
@@ -142,21 +146,19 @@ application th procRoot workRoot = do
     rows <- param "rows"
     liftIO $ closeTerm th
     liftIO $ createTerm th (cols, rows)
-    text "OK"
-
+    resultOK
   post "/api/term/resize" $ do
     cols <- param "cols"
     rows <- param "rows"
     liftIO $ resizeTerm th (cols, rows)
-    text "OK"
-
+    resultOK
   post "/api/term/close" $ do
     liftIO $ closeTerm th
-    text "OK"
+    resultOK
 
   where staticMid = staticPolicy (addBase $ procRoot </> "public")
         staticMid' = staticPolicy (addBase workRoot)
-        editor = workRoot </> "editor" </> "index.html"
+        resultOK = json $ object [ "result" .= ("OK" :: String) ]
 
 runProc_ :: FilePath -> ProcName -> ActionM ()
 runProc_ root name = do

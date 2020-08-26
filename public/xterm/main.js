@@ -14,13 +14,11 @@ Terminal.applyAddon(winptyCompat);
 
 (function(){
 
-    var TermManager = function(app){
+    var TermManager = function(elem, api, app){
 
-      var terminalContainer = document.getElementById('terminal-container')
+      var terminalContainer = document.querySelector(elem);
 
-      var protocol,
-        socketURL,
-        socket;
+      var socket;
 
       var _this = this;
       var term;
@@ -64,23 +62,20 @@ Terminal.applyAddon(winptyCompat);
             return;
           }
           var cols = size.cols,
-              rows = size.rows,
-              url = '/api/term/resize?cols=' + cols + '&rows=' + rows;
+              rows = size.rows;
 
-          fetch(url, {method: 'POST', credentials: "same-origin"});
+          api.resizeTerm(cols, rows)
         });
-
-        protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
-        socketURL = protocol + location.host;
 
         term.open(terminalContainer);
         term.winptyCompatInit();
         term.fit();
         // term.focus();
-
-        var paramFetchUrl = '/api/term/create?cols=' + term.cols + '&rows=' + term.rows;
-        fetch(paramFetchUrl, {method: 'POST', credentials: "same-origin"}).then(function (res) {
-          res.text().then(function () {
+        api.createTerm(term.cols, term.rows)
+          .then(function() {
+            return api.signWSPath('/api/term')
+          })
+          .then(function(socketURL) {
             socket = new WebSocket(socketURL);
             socket.onopen = _this.runRealTerminal;
             socket.onclose = function(e){
@@ -93,9 +88,7 @@ Terminal.applyAddon(winptyCompat);
               connected = false
               _this.close();
             };
-          })
-        })
-
+          });
       }
 
       this.close = function() {
@@ -104,12 +97,11 @@ Terminal.applyAddon(winptyCompat);
           socket.close()
         }
         app.hide()
-        var url = '/api/term/close';
-        fetch(url, {method: 'POST', credentials: "same-origin"});
+        api.closeTerm()
       }
    }
 
-   window.TermManager = TermManager;
+   window.JSTermManager = TermManager;
 
 })();
 

@@ -18,8 +18,7 @@ function filesToTree(parent, files) {
   return result;
 }
 
-function initTree(text, eventCallback) {
-  var data = JSON.parse(text);
+function initTree(data, eventCallback) {
   $("#tree").on("activate_node.jstree", function (e, data) {
     data = data.node.original;
     data.instance = 'TreeNode'
@@ -43,7 +42,12 @@ function selectFile(callback) {
   input.on('change', function(e) {
     if (this.files.length === 1) {
       var file = this.files[0];
-      callback(file.name, file)
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        var data = evt.target.result;
+        callback(file.name, data.substr(data.indexOf(',') + 1));
+      }
+      reader.readAsDataURL(file);
     }
   });
 

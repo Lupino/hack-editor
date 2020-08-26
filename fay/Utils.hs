@@ -2,11 +2,9 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module Utils
-  ( isTextFile,
-    isPythonFile,
-    isNodeFile,
-    getMode,
-    canProc
+  ( isTextFile
+  , getMode
+  , canProc
   ) where
 
 import           Data.Text (Text, fromString)
@@ -16,12 +14,6 @@ import           Regex     (Flag (I), Regex, newRegex_, test)
 
 isTextFile :: FilePath -> Bool
 isTextFile = test (newRegex_ "\\.(json|js|html|markdown|md|rst|css|htm|xml|txt|conf|py|csv|tex|aux|log|out|sh)$" [I])
-
-isPythonFile :: FilePath -> Bool
-isPythonFile = test (newRegex_ "\\.py$" [I])
-
-isNodeFile :: FilePath -> Bool
-isNodeFile = test (newRegex_ "\\.js$" [I])
 
 canProc :: FilePath -> Bool
 canProc = test (newRegex_ "\\.(js|sh|py)$" [I])

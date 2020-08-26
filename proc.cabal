@@ -70,6 +70,8 @@ executable proc
 
                      , websockets
                      , unix
+                     , aeson
+                     , base64-bytestring
   default-language:    Haskell2010
 
 test-suite proc-test

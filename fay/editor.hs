@@ -4,19 +4,19 @@
 module Main (main) where
 
 import           ACEditor
-import           Data.Text (Text, fromString, null, putStrLn, (<>))
-import           DOM       (Element, Event, Timer, clearTimeout, getElementById,
-                            removeClass, setTimeout)
+import           Data.Text   (Text, fromString, null, putStrLn, (<>))
+import           DOM         (Element, Event, Timer, clearTimeout,
+                              getElementById, removeClass, setTimeout)
 import           DOMUtils
-import           FFI       (ffi)
-import           FilePath  (FilePath, dropFileName, (</>))
-import           FPromise  (catch, then_, toReject, toResolve)
-import           HTTP      (get, put, resolveText)
-import           Prelude   hiding (concat, lines, null, putStrLn, unlines)
-import           Proc      (runProc)
-import           RFile     (deleteFile, readFile, saveFile)
-import           Term      (TermManager, closeTerm, newTermManager, openTerm)
-import           Utils     (canProc, getMode, isTextFile)
+import           FFI         (ffi)
+import           FilePath    (FilePath, dropFileName, (</>))
+import           FPromise    (catch, then_, toReject, toResolve)
+import           Prelude     hiding (concat, lines, null, putStrLn, unlines)
+import           ProcAPI     (ProcAPI, loadFileTree, newProcAPI)
+import qualified ProcAPI     as API (readFile, removeFile, runFile,
+                                     uploadArchive, uploadFile, writeFile)
+import           TermManager (TermManager, closeTerm, newTermManager, openTerm)
+import           Utils       (canProc, getMode, isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
@@ -56,8 +56,8 @@ saving = do
   void $ saveBtn >>= setProp "disabled" "disabled" >>= setHtml "保存..."
   setSaveState Saving
 
-unsaved :: Fay ()
-unsaved = do
+unsaved :: ProcAPI -> Fay ()
+unsaved api = do
   setSaveState Unsave
   void $ saveBtn >>= removeProp "disabled" >>= setHtml "保存"
 
@@ -69,7 +69,7 @@ unsaved = do
   where save :: Timer -> Fay ()
         save t = do
           setTimer t
-          saveCurrent
+          saveCurrent api
 
 getCurrentPath :: Fay FilePath
 getCurrentPath = ffi "window['currentPath']"
@@ -87,8 +87,8 @@ isUnsave :: SaveState -> Bool
 isUnsave Unsave = True
 isUnsave _      = False
 
-saveCurrent :: Fay ()
-saveCurrent = do
+saveCurrent :: ProcAPI -> Fay ()
+saveCurrent api = do
   currentPath <- getCurrentPath
   saveState <- getSaveState
 
@@ -96,33 +96,33 @@ saveCurrent = do
     saving
     editor <- getEditor
     dat <- getValue editor
-    void $ saveFile currentPath dat
+    void $ API.writeFile api currentPath dat
               >>= then_ (toResolve $ const saved)
-              >>= catch (toReject $ const unsaved)
+              >>= catch (toReject $ const $ unsaved api)
 
 
-newDoc :: Event -> Fay ()
-newDoc _ = do
-  saveCurrent
+newDoc :: ProcAPI -> Event -> Fay ()
+newDoc api _ = do
+  saveCurrent api
   prompt "输入文件名" $ \fn -> do
     currentDirectory <- getCurrentDirectory
 
     let path = currentDirectory </> fn
 
-    void $ saveFile (fixed path (isTextFile fn)) "\n"
-                >>= then_ (toResolve $ const updateTree)
+    void $ API.writeFile api (fixed path (isTextFile fn)) "\n"
+                >>= then_ (toResolve $ const $ updateTree api)
                 >>= catch (toReject putStrLn)
 
   where fixed fn True  = fn
         fixed fn False = fn <> ".md"
 
-deleteDoc :: Event -> Fay ()
-deleteDoc _ = do
+deleteDoc :: ProcAPI -> Event -> Fay ()
+deleteDoc api _ = do
   currentPath <- getCurrentPath
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
-      void $ deleteFile currentPath
-                >>= then_ (toResolve $ const (updateTree >> doResolveReadFile "" "" >> showCurrentPath ""))
+      void $ API.removeFile api currentPath
+                >>= then_ (toResolve $ const (updateTree api >> doResolveReadFile api "" "" >> showCurrentPath ""))
                 >>= catch (toReject putStrLn)
 
 data TreeNode = TreeNode { isDir :: Bool, serverPath :: Text }
@@ -133,15 +133,16 @@ initTree = ffi "initTree(%1, %2)"
 clearTree :: Fay()
 clearTree = ffi "clearTree()"
 
-updateTree :: Fay ()
-updateTree = do
+updateTree :: ProcAPI -> Fay ()
+updateTree api = do
   clearTree
-  loadTree treeNodeAction
+  loadTree api
 
-loadTree :: (TreeNode -> Fay ()) -> Fay ()
-loadTree act = void $ get "/api/file"
-                          >>= then_ resolveText
-                          >>= then_ (toResolve (`initTree` act))
+loadTree :: ProcAPI -> Fay ()
+loadTree api =
+  void $ loadFileTree api
+    >>= then_ (toResolve (`initTree` treeNodeAction api))
+
 
 getEditor :: Fay Editor
 getEditor = ffi "window['editor']"
@@ -165,8 +166,8 @@ initEditor = do
     setIsEditorInitialized
     getEditor
 
-doResolveReadFile :: FilePath -> Text -> Fay ()
-doResolveReadFile fn body = do
+doResolveReadFile :: ProcAPI -> FilePath -> Text -> Fay ()
+doResolveReadFile api fn body = do
   void $ initEditor
            >>= removeAllEvent "change"
            >>= setValue body
@@ -174,23 +175,23 @@ doResolveReadFile fn body = do
   if canProc fn then void $ getElementById "run" >>= removeProp "disabled"
   else void $ getElementById "run" >>= setProp "disabled" "disabled"
 
-  when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const unsaved)
+  when (isTextFile fn) $ void $ getEditor >>= addEvent "change" (const $ unsaved api)
 
 showCurrentPath :: FilePath -> Fay ()
 showCurrentPath path =
   void $ getElementById "currentPath" >>= setHtml path
 
-treeNodeAction :: TreeNode -> Fay ()
-treeNodeAction tn = do
+treeNodeAction :: ProcAPI -> TreeNode -> Fay ()
+treeNodeAction api tn = do
   showCurrentPath currentPath
   setCurrentPath currentPath
   setCurrentDirectory currentDirectory
-  doResolveReadFile currentPath ""
+  doResolveReadFile api currentPath ""
   if isDir tn then void $ getElementById "download" >>= setProp "disabled" "disabled"
   else void $ getElementById "download" >>= removeProp "disabled"
   when (not (isDir tn) && isTextFile currentPath) $
-    void $ readFile currentPath
-              >>= then_ (toResolve $ doResolveReadFile currentPath)
+    void $ API.readFile api currentPath
+              >>= then_ (toResolve $ doResolveReadFile api currentPath)
               >>= catch (toReject print)
 
   where currentPath = serverPath tn
@@ -200,29 +201,30 @@ treeNodeAction tn = do
 selectFile :: (Text -> Text -> Fay ()) -> Fay ()
 selectFile = ffi "selectFile(%1)"
 
-uploadFile :: Bool -> Event -> Fay ()
-uploadFile isArc _ = selectFile action
+uploadFile :: ProcAPI -> Bool -> Event -> Fay ()
+uploadFile api isArc _ = selectFile action
   where action :: Text -> Text -> Fay ()
         action name dat = do
           currentDirectory <- getCurrentDirectory
-          void $ put (uri </> currentDirectory </> name) (Just dat)
-                     >>= then_ (toResolve $ const updateTree)
-        uri = if isArc then "/api/archive" else "/api/file"
+          void $ doUpload api (currentDirectory </> name) dat
+                     >>= then_ (toResolve $ const $ updateTree api)
+        doUpload = if isArc then API.uploadArchive else API.uploadFile
 
-runProcAndShow :: FilePath -> [Text] -> Fay ()
-runProcAndShow fn args = void  $ runProc fn args
-                                    >>= then_ (toResolve showResult)
-                                    >>= catch (toReject showResult)
+runProcAndShow :: ProcAPI -> FilePath -> [Text] -> Fay ()
+runProcAndShow api fn args =
+  void $ API.runFile api fn args
+    >>= then_ (toResolve showResult)
+    >>= catch (toReject showResult)
   where showResult :: Text -> Fay ()
         showResult txt = do
-          updateTree
+          updateTree api
           void $ getElementById "proc-result-message" >>= setHtml txt
           getModal "#proc-result" >>= showModal
 
-runCurrentFile :: Fay ()
-runCurrentFile = do
+runCurrentFile :: ProcAPI -> Fay ()
+runCurrentFile api = do
   currentPath <- getCurrentPath
-  runProcAndShow currentPath []
+  runProcAndShow api currentPath []
 
 showTerm :: TermManager -> Event -> Fay ()
 showTerm tm _ = do
@@ -236,33 +238,34 @@ download _ = do
 
 program ::  Fay ()
 program = do
-  setAutoSave True
-  tm <- newTermManager =<< getModal "#term"
+  api <- newProcAPI "term" "term"
+  tm <- newTermManager "#terminal-container" api =<< getModal "#term"
 
-  modalEvent "#term" (return ()) updateTree
+  setAutoSave True
+  modalEvent "#term" (return ()) (updateTree api)
 
   windowAddEventListener "beforeunload" $ const (closeTerm tm)
 
   void $ getElementById "new"
-      >>= addEventListener "click" newDoc
+      >>= addEventListener "click" (newDoc api)
   void $ getElementById "delete"
-      >>= addEventListener "click" deleteDoc
+      >>= addEventListener "click" (deleteDoc api)
   void $ saveBtn
-      >>= addEventListener "click" (const saveCurrent)
+      >>= addEventListener "click" (const $ saveCurrent api)
   void $ getElementById "upload"
-      >>= addEventListener "click" (uploadFile False)
+      >>= addEventListener "click" (uploadFile api False)
   void $ getElementById "uploadArchive"
-      >>= addEventListener "click" (uploadFile True)
+      >>= addEventListener "click" (uploadFile api True)
   void $ getElementById "openTerm"
       >>= addEventListener "click" (showTerm tm)
 
   void $ getElementById "run"
-      >>= addEventListener "click" (const runCurrentFile)
+      >>= addEventListener "click" (const $ runCurrentFile api)
 
   void $ getElementById "download"
       >>= addEventListener "click" download
 
-  loadTree treeNodeAction
+  loadTree api
 
 main :: Fay ()
 main = program
