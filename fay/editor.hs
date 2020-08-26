@@ -210,11 +210,14 @@ treeNodeAction api tn = do
 
   if not (isDir tn) && isTextFile currentPath then
     void $ API.readFile api currentPath
-              >>= then_ (toResolve $ doResolveReadFile currentPath >> addChangeEvent api)
+              >>= then_ (toResolve $ doResolve currentPath)
               >>= catch (toReject print)
 
-  else doResolveReadFile currentPath ""
+  else setEditorData "none" ""
   where currentPath = serverPath tn
+        doResolve path txt = do
+          setEditorData (getMode path) txt
+          addChangeEvent api
 
 
 selectFile :: (Text -> Text -> Fay ()) -> Fay ()
