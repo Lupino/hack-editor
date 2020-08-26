@@ -122,7 +122,7 @@ deleteDoc api _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ API.removeFile api currentPath
-                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> setEditorData "none" ""))
+                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> setEditorData "text" ""))
                 >>= catch (toReject putStrLn)
 
 data TreeNode
@@ -213,7 +213,7 @@ treeNodeAction api tn = do
               >>= then_ (toResolve $ doResolve currentPath)
               >>= catch (toReject print)
 
-  else setEditorData "none" ""
+  else setEditorData "text" ""
   where currentPath = serverPath tn
         doResolve path txt = do
           setEditorData (getMode path) txt
