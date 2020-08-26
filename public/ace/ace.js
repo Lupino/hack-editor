@@ -3331,7 +3331,7 @@ exports.loadScript = function(path, callback) {
     var head = dom.getDocumentHead();
     var s = document.createElement('script');
 
-    s.src = path;
+    s.src = path + '?key=__KEY__';
     head.appendChild(s);
 
     s.onload = s.onreadystatechange = function(_, isAbort) {
@@ -3704,7 +3704,7 @@ exports.loadModule = function(moduleName, onLoad) {
 
     if (!exports.get("packaged"))
         return afterLoad();
-    net.loadScript(exports.moduleUrl(moduleName, moduleType) + '?key=__KEY__', afterLoad);
+    net.loadScript(exports.moduleUrl(moduleName, moduleType), afterLoad);
 };
 init(true);function init(packaged) {
 
@@ -16792,6 +16792,8 @@ var WorkerClient = function(topLevelNamespaces, mod, classname, workerUrl) {
             tlns[ns] = normalizePath(require.toUrl(ns, null, "_").replace(/(\.js)?(\?.*)?$/, ""));
         });
     }
+
+    workerUrl += '?key=__KEY__';
 
     try {
         this.$worker = new Worker(workerUrl);
