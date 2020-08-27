@@ -12,6 +12,8 @@ WORKDIR /data
 
 COPY . /data
 
+RUN sed -i 's/build-type:.*/build-type: Simple/' proc.cabal
+
 RUN stack install --local-bin-path bin
 
 FROM ubuntu:20.04
