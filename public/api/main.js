@@ -23,7 +23,7 @@ class ProcApi extends Gateway {
   }
   loadFileTree() {
     const pathname = `/api/file`;
-    return this.requestJSON({pathname});
+    return this.request({pathname}).then((rsp) => rsp.json());
   }
   writeFile(fileName, raw) {
     const pathname = `/api/file${fileName}`;
