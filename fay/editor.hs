@@ -305,17 +305,18 @@ showTerm tm = do
   void $ switchScreenBtn >>= setHtml "编辑器"
   openTerm tm
 
-hideTerm :: Fay ()
-hideTerm = do
+hideTerm :: ProcAPI -> Fay ()
+hideTerm api = do
   termElem >>= setShow False
   setScreenMode EditorMode
   void $ switchScreenBtn >>= setHtml "终端"
+  updateTree api
 
-switchScreen :: TermManager -> Event -> Fay ()
-switchScreen tm _ = do
+switchScreen :: TermManager -> ProcAPI -> Event -> Fay ()
+switchScreen tm api _ = do
   mode <- getScreenMode
   case mode of
-    TermMode   -> hideTerm
+    TermMode   -> hideTerm api
     EditorMode -> showTerm tm
 
 signCurrentPath :: ProcAPI -> (Text -> Text -> Fay ()) -> Fay ()
@@ -362,7 +363,7 @@ prepareSecrect key next = do
 program :: Text -> Text -> Fay ()
 program key sec = do
   api <- newProcAPI key sec
-  tm <- newTermManager "#terminal-container" api hideTerm
+  tm <- newTermManager "#terminal-container" api (hideTerm api)
   setAutoSave True
   setScreenMode EditorMode
 
@@ -379,7 +380,7 @@ program key sec = do
   void $ getElementById "uploadArchive"
       >>= addEventListener "click" (uploadFile api True)
   void $ switchScreenBtn
-      >>= addEventListener "click" (switchScreen tm)
+      >>= addEventListener "click" (switchScreen tm api)
 
   void $ getElementById "run"
       >>= addEventListener "click" (const $ runCurrentFile api)
