@@ -56,5 +56,5 @@ function selectFile(callback) {
 }
 
 function isTextFile(fileName) {
- return /\.(json|js|html|markdown|md|rst|css|htm|xml|txt|py|csv|log|sh|sql)$/i.test(fileName);
+ return /\.(json|js|html|markdown|md|rst|css|htm|xml|txt|py|csv|log|sh|sql|yaml|yml)$/i.test(fileName);
 }
