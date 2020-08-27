@@ -82,3 +82,20 @@ body {
 #terminal-container {
   height: calc(100% - 65px);
 }
+
+.hide {
+  display: none;
+}
+
+#read-only {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#read-only img {
+  max-width: 98%;
+  max-height: 98%;
+}

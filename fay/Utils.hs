@@ -5,6 +5,7 @@ module Utils
   ( isTextFile
   , getMode
   , canProc
+  , isImage
   ) where
 
 import           Data.Text (Text, fromString)
@@ -38,3 +39,6 @@ getMode = go modeMap
         go [] _ = "text"
         go ((mode, reg):xs) f | test reg f = mode
                               | otherwise  = go xs f
+
+isImage :: FilePath -> Bool
+isImage = test (newRegex_ "\\.(jpg|png|gif|jpeg|svg)$" [I])

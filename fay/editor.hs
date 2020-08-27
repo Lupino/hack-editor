@@ -16,7 +16,7 @@ import           ProcAPI     (ProcAPI, loadFileTree, newProcAPI, signFilePath)
 import qualified ProcAPI     as API (readFile, removeFile, runFile,
                                      uploadArchive, uploadFile, writeFile)
 import           TermManager (TermManager, closeTerm, newTermManager, openTerm)
-import           Utils       (canProc, getMode, isTextFile)
+import           Utils       (canProc, getMode, isImage, isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
@@ -74,8 +74,18 @@ unsaved api = do
 getCurrentPath :: Fay FilePath
 getCurrentPath = ffi "window['currentPath']"
 
-setCurrentPath :: FilePath -> Fay ()
-setCurrentPath = ffi "(function(p){window['currentPath'] = p })(%1)"
+setCurrentPath_ :: FilePath -> Fay ()
+setCurrentPath_ = ffi "(function(p){window['currentPath'] = p })(%1)"
+
+setCurrentPath :: Bool -> FilePath -> Fay ()
+setCurrentPath isdir path = do
+  void $ getElementById "currentPath" >>= setHtml path
+  setCurrentPath_ path
+  setCurrentDirectory dir
+
+  where dir = if isdir
+                then path
+                else dropFileName path
 
 getCurrentDirectory :: Fay FilePath
 getCurrentDirectory = ffi "window['currentDirectory']"
@@ -122,7 +132,7 @@ deleteDoc api _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ API.removeFile api currentPath
-                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> setEditorData "text" ""))
+                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> cleanScreen))
                 >>= catch (toReject putStrLn)
 
 data TreeNode
@@ -162,6 +172,32 @@ isEditorInitialized = ffi "window['editorInitialized']"
 setIsEditorInitialized :: Fay ()
 setIsEditorInitialized = ffi "window['editorInitialized'] = true"
 
+readOnlyElem :: Fay Element
+readOnlyElem = getElementById "read-only"
+
+setReadOnly :: Bool -> Element -> Fay ()
+setReadOnly True  = flip removeClass "hide"
+setReadOnly False = flip addClass "hide"
+
+showImage :: ProcAPI -> Fay ()
+showImage api = do
+  setEditorData "text" ""
+  signCurrentPath api $ \_ url ->
+    readOnlyElem
+      >>= setHtml ("<img src='" <> url <> "'>")
+      >>= setReadOnly True
+
+showFile :: ProcAPI -> Fay ()
+showFile api = do
+  currentPath <- getCurrentPath
+  readOnlyElem >>= setReadOnly False
+  void $ API.readFile api currentPath
+            >>= then_ (toResolve $ doResolve currentPath)
+            >>= catch (toReject print)
+  where doResolve path txt = do
+          setEditorData (getMode path) txt
+          addChangeEvent api
+
 initEditor :: Fay Editor
 initEditor = do
   isInitialized <- isEditorInitialized
@@ -192,32 +228,31 @@ addChangeEvent api =
 
 showCurrentPath :: Bool -> FilePath -> Fay ()
 showCurrentPath isdir path = do
-  void $ getElementById "currentPath" >>= setHtml path
-  setCurrentPath path
-  setCurrentDirectory dir
+  setCurrentPath isdir path
   enableElem "download" $ not isdir
   enableElem "downloadLink" $ not isdir
   enableElem "delete" $ not $ null path
   enableElem "run" $ canProc path
 
-  where dir = if isdir
-                 then path
-                 else dropFileName path
+cleanScreen :: Fay ()
+cleanScreen = do
+  setEditorData "text" ""
+  readOnlyElem >>= setReadOnly False
 
 treeNodeAction :: ProcAPI -> TreeNode -> Fay ()
 treeNodeAction api tn = do
   showCurrentPath (isDir tn) currentPath
 
-  if not (isDir tn) && isTextFile currentPath then
-    void $ API.readFile api currentPath
-              >>= then_ (toResolve $ doResolve currentPath)
-              >>= catch (toReject print)
+  if isDir tn
+    then cleanScreen
+    else
+      if isTextFile currentPath then showFile api
+      else
+        if isImage currentPath
+          then showImage api
+          else cleanScreen
 
-  else setEditorData "text" ""
   where currentPath = serverPath tn
-        doResolve path txt = do
-          setEditorData (getMode path) txt
-          addChangeEvent api
 
 
 selectFile :: (Text -> Text -> Fay ()) -> Fay ()
@@ -254,23 +289,21 @@ showTerm tm _ = do
   getModal "#term" >>= showModal
   openTerm tm
 
+signCurrentPath :: ProcAPI -> (Text -> Text -> Fay ()) -> Fay ()
+signCurrentPath api next = do
+  currentPath <- getCurrentPath
+  void $ signFilePath api currentPath
+    >>= then_ (toResolve (next currentPath))
+    >>= catch (toReject print)
+
 download :: ProcAPI -> Event -> Fay ()
 download api _ = do
-  currentPath <- getCurrentPath
-  void $ signFilePath api currentPath
-    >>= then_ (toResolve (saveAs currentPath))
-    >>= catch (toReject print)
+  signCurrentPath api saveAs
 
 downloadLink :: ProcAPI -> Event -> Fay ()
-downloadLink api _ = do
-  currentPath <- getCurrentPath
-  void $ signFilePath api currentPath
-    >>= then_ (toResolve showResult)
-    >>= catch (toReject print)
-  where showResult :: Text -> Fay ()
-        showResult txt = do
-          prompt "下载地址" txt $ const $ return ()
-
+downloadLink api _ =
+  signCurrentPath api $ \_ url ->
+    prompt "下载地址" url $ const $ return ()
 
 getKeyFromLocation :: Fay Text
 getKeyFromLocation = ffi "/key=([^&]+)/.exec(location.search)[1]"
