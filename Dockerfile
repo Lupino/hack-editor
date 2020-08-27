@@ -23,7 +23,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y ca-certificates curl wget python3 locales python3-pip git && \
     pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn && \
-    mkdir -p /data
+    mkdir -p /data && \
+    mkdir -p /app
 
 COPY --from=0 /data/bin/* /usr/bin/
 COPY --from=0 /data/public /app
