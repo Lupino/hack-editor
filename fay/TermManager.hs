@@ -6,14 +6,13 @@ module TermManager
   ) where
 
 import           Data.Text (Text)
-import           DOMUtils  (Modal)
 import           FFI       (ffi)
 import           Prelude
 import           ProcAPI   (ProcAPI)
 
 data TermManager
 
-newTermManager :: Text -> ProcAPI -> Modal -> Fay TermManager
+newTermManager :: Text -> ProcAPI -> Fay () -> Fay TermManager
 newTermManager =  ffi "new JSTermManager(%1, %2, %3)"
 
 openTerm :: TermManager -> Fay ()

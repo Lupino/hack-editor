@@ -21,11 +21,19 @@ import           Utils       (canProc, getMode, isImage, isTextFile)
 
 data SaveState = Saved | Saving | Unsave
 
+data ScreenMode = EditorMode | TermMode
+
 setSaveState :: SaveState -> Fay ()
 setSaveState = ffi "(function (state) { window['saveState'] = state['instance']})(%1)"
 
 getSaveState :: Fay SaveState
 getSaveState = ffi "{ instance: window['saveState'] }"
+
+setScreenMode :: ScreenMode -> Fay ()
+setScreenMode = ffi "(function (state) { window['screenMode'] = state['instance']})(%1)"
+
+getScreenMode :: Fay ScreenMode
+getScreenMode = ffi "{ instance: window['screenMode'] }"
 
 setTimer :: Timer -> Fay ()
 setTimer = ffi "(function (t) { window['saveTimeout'] = t; })(%1)"
@@ -172,12 +180,18 @@ isEditorInitialized = ffi "window['editorInitialized']"
 setIsEditorInitialized :: Fay ()
 setIsEditorInitialized = ffi "window['editorInitialized'] = true"
 
+termElem :: Fay Element
+termElem = getElementById "term"
+
 readOnlyElem :: Fay Element
 readOnlyElem = getElementById "read-only"
 
-setReadOnly :: Bool -> Element -> Fay ()
-setReadOnly True  = flip removeClass "hide"
-setReadOnly False = flip addClass "hide"
+switchScreenBtn :: Fay Element
+switchScreenBtn = getElementById "openTerm"
+
+setShow :: Bool -> Element -> Fay ()
+setShow True  = flip removeClass "hide"
+setShow False = flip addClass "hide"
 
 showImage :: ProcAPI -> Fay ()
 showImage api = do
@@ -185,12 +199,12 @@ showImage api = do
   signCurrentPath api $ \_ url ->
     readOnlyElem
       >>= setHtml ("<img src='" <> url <> "'>")
-      >>= setReadOnly True
+      >>= setShow True
 
 showFile :: ProcAPI -> Fay ()
 showFile api = do
   currentPath <- getCurrentPath
-  readOnlyElem >>= setReadOnly False
+  readOnlyElem >>= setShow False
   void $ API.readFile api currentPath
             >>= then_ (toResolve $ doResolve currentPath)
             >>= catch (toReject print)
@@ -237,12 +251,11 @@ showCurrentPath isdir path = do
 cleanScreen :: Fay ()
 cleanScreen = do
   setEditorData "text" ""
-  readOnlyElem >>= setReadOnly False
+  readOnlyElem >>= setShow False
 
 treeNodeAction :: ProcAPI -> TreeNode -> Fay ()
 treeNodeAction api tn = do
   showCurrentPath (isDir tn) currentPath
-
   if isDir tn
     then cleanScreen
     else
@@ -273,6 +286,7 @@ runProcAndShow api fn args =
   void $ API.runFile api fn args
     >>= then_ (toResolve showResult)
     >>= catch (toReject showResult)
+
   where showResult :: Text -> Fay ()
         showResult txt = do
           updateTree api
@@ -284,10 +298,25 @@ runCurrentFile api = do
   currentPath <- getCurrentPath
   runProcAndShow api currentPath []
 
-showTerm :: TermManager -> Event -> Fay ()
-showTerm tm _ = do
-  getModal "#term" >>= showModal
+showTerm :: TermManager -> Fay ()
+showTerm tm = do
+  termElem >>= setShow True
+  setScreenMode TermMode
+  void $ switchScreenBtn >>= setHtml "编辑器"
   openTerm tm
+
+hideTerm :: Fay ()
+hideTerm = do
+  termElem >>= setShow False
+  setScreenMode EditorMode
+  void $ switchScreenBtn >>= setHtml "终端"
+
+switchScreen :: TermManager -> Event -> Fay ()
+switchScreen tm _ = do
+  mode <- getScreenMode
+  case mode of
+    TermMode   -> hideTerm
+    EditorMode -> showTerm tm
 
 signCurrentPath :: ProcAPI -> (Text -> Text -> Fay ()) -> Fay ()
 signCurrentPath api next = do
@@ -333,10 +362,9 @@ prepareSecrect key next = do
 program :: Text -> Text -> Fay ()
 program key sec = do
   api <- newProcAPI key sec
-  tm <- newTermManager "#terminal-container" api =<< getModal "#term"
-
+  tm <- newTermManager "#terminal-container" api hideTerm
   setAutoSave True
-  modalEvent "#term" (return ()) (updateTree api)
+  setScreenMode EditorMode
 
   windowAddEventListener "beforeunload" $ const (closeTerm tm)
 
@@ -350,8 +378,8 @@ program key sec = do
       >>= addEventListener "click" (uploadFile api False)
   void $ getElementById "uploadArchive"
       >>= addEventListener "click" (uploadFile api True)
-  void $ getElementById "openTerm"
-      >>= addEventListener "click" (showTerm tm)
+  void $ switchScreenBtn
+      >>= addEventListener "click" (switchScreen tm)
 
   void $ getElementById "run"
       >>= addEventListener "click" (const $ runCurrentFile api)

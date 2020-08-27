@@ -14,7 +14,7 @@ Terminal.applyAddon(winptyCompat);
 
 (function(){
 
-    var TermManager = function(elem, api, app){
+    var TermManager = function(elem, api, hide){
 
       var terminalContainer = document.querySelector(elem);
 
@@ -23,7 +23,6 @@ Terminal.applyAddon(winptyCompat);
       var _this = this;
       var term;
       var connected = false;
-      this.app = app;
 
       this.init = function(){
         if (connected) {
@@ -96,7 +95,7 @@ Terminal.applyAddon(winptyCompat);
           connected = false;
           socket.close()
         }
-        app.hide()
+        hide();
         api.closeTerm()
       }
    }

@@ -74,20 +74,20 @@ body {
   margin-right: 10px;
 }
 
-#term .uk-modal-dialog {
-  width: calc(100% - 40px);
-  height: calc(100% - 80px);
+#terminal-container {
+  height: calc(100% + 10px);
 }
 
-#terminal-container {
-  height: calc(100% - 65px);
+#term {
+  background-color: #ebebeb;
+  z-index: 100;
 }
 
 .hide {
   display: none;
 }
 
-#read-only {
+#read-only, #term {
   position: absolute;
   top: 42px;
   left: 0;
