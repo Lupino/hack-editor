@@ -22,6 +22,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TERM=xterm-color
 ENV PATH $PATH:/data/bin
 ENV SHELL bash
+ENV LC_ALL=C
 
 RUN apt-get update && \
     apt-get install -y curl wget python3 locales python3-pip git vim screen && \
@@ -32,8 +33,8 @@ RUN apt-get update && \
     ln -s /data/.vim /root/.vim
 
 COPY --from=0 /data/bin/* /usr/bin/
-COPY --from=0 /data/public/* /app/public/
-COPY --from=0 /data/source/* /data/
+COPY public /app/public
+COPY source /data
 
 WORKDIR /app
 
