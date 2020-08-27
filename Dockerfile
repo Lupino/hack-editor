@@ -19,15 +19,20 @@ RUN stack install --local-bin-path bin
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TERM=xterm-color
+ENV PATH $PATH:/data/bin
 
 RUN apt-get update && \
-    apt-get install -y ca-certificates curl wget python3 locales python3-pip git && \
+    apt-get install -y curl wget python3 locales python3-pip git vim && \
     pip3 install --upgrade pip numpy pandas matplotlib scipy scikit-learn && \
     mkdir -p /data && \
-    mkdir -p /app
+    mkdir -p /app/public && \
+    ln -s /data/.vim/vimrc /root/.vimrc && \
+    ln -s /data/.vim /root/.vim
 
 COPY --from=0 /data/bin/* /usr/bin/
-COPY --from=0 /data/public /app
+COPY --from=0 /data/public/* /app/public/*
+COPY --from=0 /data/source/* /data/*
 
 WORKDIR /app
 
