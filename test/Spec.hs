@@ -1,4 +1,4 @@
-import SSHakyll
+import           HackEditor
 
 main :: IO ()
 main = do

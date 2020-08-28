@@ -12,7 +12,7 @@ WORKDIR /data
 
 COPY . /data
 
-RUN sed -i 's/build-type:.*/build-type: Simple/' proc.cabal
+RUN sed -i 's/build-type:.*/build-type: Simple/' hack-editor.cabal
 
 RUN stack install --local-bin-path bin
 
@@ -38,6 +38,6 @@ COPY source /data
 
 WORKDIR /app
 
-ENTRYPOINT ["/usr/bin/proc"]
+ENTRYPOINT ["/usr/bin/hack-editor"]
 
 CMD ["--host", "0.0.0.0", "--port", "8000", "--source", "/data"]

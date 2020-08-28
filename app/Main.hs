@@ -13,6 +13,7 @@ import           Data.List                            (isPrefixOf)
 import           Data.Streaming.Network.Internal      (HostPreference (Host))
 import qualified Data.Text                            as T (Text, pack, unpack)
 import qualified Data.Text.Lazy                       as TL (pack)
+import           HackEditor
 import           Network.HTTP.Types                   (status404, status500)
 import           Network.Mime                         (MimeType,
                                                        defaultMimeLookup)
@@ -24,7 +25,6 @@ import           Network.Wai.Handler.WebSockets       (websocketsOr)
 import           Network.Wai.Middleware.RequestLogger (logStdout)
 import           Network.Wai.Middleware.Static        (addBase, staticPolicy)
 import qualified Network.WebSockets                   as WS (defaultConnectionOptions)
-import           Proc
 import           System.Directory                     (doesFileExist)
 import           System.FilePath                      (dropFileName, (</>))
 import           System.Posix.Directory               (changeWorkingDirectory,
@@ -54,12 +54,12 @@ parser :: Parser Options
 parser = Options <$> strOption (long "host"
                                 <> short 'H'
                                 <> metavar "HOST"
-                                <> help "Proc server host."
+                                <> help "HackEditor server host."
                                 <> value "127.0.0.1")
                  <*> option auto (long "port"
                                   <> short 'p'
                                   <> metavar "PORT"
-                                  <> help "Proc server port."
+                                  <> help "HackEditor server port."
                                   <> value 8000 )
                  <*> strOption (long "source"
                                 <> short 's'
@@ -72,7 +72,7 @@ main = execParser opts >>= program
   where
     opts = info (helper <*> parser)
       (fullDesc
-       <> progDesc "Proc Server" )
+       <> progDesc "HackEditor Server" )
 
 program :: Options -> IO ()
 program opts = do

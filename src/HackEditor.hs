@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Proc
+module HackEditor
   ( encodeTreeList
   , treeListToJSON
   , getFileTreeList
