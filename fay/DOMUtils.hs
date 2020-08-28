@@ -2,28 +2,27 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module DOMUtils
-  (
-    setProp,
-    removeProp,
-    getProp,
-    querySelector,
-    querySelectorAll,
-    setHtml,
-    setDisplay,
-    addEventListener,
-    windowAddEventListener,
-    clearEventListeners,
-    getEventTargetAttr,
-    Modal,
-    getModal,
-    showModal,
-    hideModal,
-    modalEvent,
-    prompt,
-    confirm_,
-    confirm,
-    notify,
-    saveAs
+  ( setProp
+  , removeProp
+  , getProp
+  , querySelector
+  , querySelectorAll
+  , setHtml
+  , setDisplay
+  , addEventListener
+  , windowAddEventListener
+  , clearEventListeners
+  , getEventTargetAttr
+  , Modal
+  , getModal
+  , showModal
+  , hideModal
+  , modalEvent
+  , prompt
+  , confirm_
+  , confirm
+  , notify
+  , saveAs
   ) where
 
 import           Data.Text (Text, fromString)

@@ -2,11 +2,10 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module FilePath
-  (
-    FilePath,
-    append,
-    (</>),
-    dropFileName
+  ( FilePath
+  , append
+  , (</>)
+  , dropFileName
   ) where
 
 import           Data.Text (Text, fromString)

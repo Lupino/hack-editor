@@ -2,20 +2,19 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module FPromise
-  (
-    Promise,
-    Reject,
-    Resolve,
-    fromReject,
-    fromResolve,
-    toReject,
-    toResolve,
-    newPromise,
-    then_,
-    then__,
-    catch,
-    resolve,
-    reject
+  ( Promise
+  , Reject
+  , Resolve
+  , fromReject
+  , fromResolve
+  , toReject
+  , toResolve
+  , newPromise
+  , then_
+  , then__
+  , catch
+  , resolve
+  , reject
   ) where
 
 import           Data.Text (Text, fromString)

@@ -2,21 +2,20 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module Regex
-  (
-    Regex,
-    Flag (..),
-    newRegex,
-    newRegex_,
-    compile,
-    compile_,
-    exec,
-    test,
-    flags,
-    global,
-    ignoreCase,
-    multiline,
-    unicode,
-    sticky
+  ( Regex
+  , Flag (..)
+  , newRegex
+  , newRegex_
+  , compile
+  , compile_
+  , exec
+  , test
+  , flags
+  , global
+  , ignoreCase
+  , multiline
+  , unicode
+  , sticky
   ) where
 
 import           Data.Text (Text, fromString)

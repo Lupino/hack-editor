@@ -2,15 +2,14 @@
 {-# LANGUAGE RebindableSyntax  #-}
 
 module ACEditor
-  (
-    Editor,
-    newEditor,
-    setTheme,
-    setMode,
-    setValue,
-    getValue,
-    addEvent,
-    removeAllEvent
+  ( Editor
+  , newEditor
+  , setTheme
+  , setMode
+  , setValue
+  , getValue
+  , addEvent
+  , removeAllEvent
   ) where
 
 import           Data.Text (Text, fromString)
