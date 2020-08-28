@@ -32,10 +32,11 @@ import           Control.Monad.STM              (atomically)
 import           Data.Aeson                     (ToJSON (..), Value (..),
                                                  encode, object, (.=))
 import           Data.ByteString                (ByteString)
+import qualified Data.ByteString                as B (readFile)
 import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
                                                        toStrict, writeFile)
 import qualified Data.ByteString.Lazy.UTF8      as LBU (fromString)
-import qualified Data.ByteString.UTF8           as BU (toString)
+import qualified Data.ByteString.UTF8           as BU (lines, toString)
 import           Data.HashMap.Strict            (union)
 import           Data.Maybe                     (isNothing)
 import qualified Data.Text                      as T (pack)
@@ -51,7 +52,10 @@ import           System.Directory               (createDirectoryIfMissing,
                                                  removeDirectoryRecursive,
                                                  removeFile)
 import           System.Exit                    (ExitCode (..))
-import           System.FilePath                (dropFileName, (</>))
+import           System.FilePath                (dropFileName, takeFileName,
+                                                 (</>))
+import           System.FilePath.Glob           (Pattern, compile, match,
+                                                 simplify)
 import           System.IO                      (IOMode (ReadMode), hFileSize,
                                                  withFile)
 import           System.Posix.Pty               (Pty, PtyControlCode, closePty,
@@ -81,24 +85,48 @@ treeListToJSON = foldr (unionValue . toJSON) Null
 encodeTreeList :: [FileTree] -> LB.ByteString
 encodeTreeList = encode . treeListToJSON
 
-getFileTreeList :: FilePath -> IO [FileTree]
-getFileTreeList topdir = do
+loadPattern :: FilePath -> [Pattern] -> IO [Pattern]
+loadPattern dir pats = do
+  isFile <- doesFileExist path
+  if isFile then do
+    xs <- map BU.toString . BU.lines <$> B.readFile path
+    return $ pats ++ go xs
+  else return pats
+  where path = dir </> ".editorignore"
+
+        go :: [String] -> [Pattern]
+        go []           = []
+        go (('#':_):xs) = go xs
+        go ("":xs)      = go xs
+        go (x:xs)       = simplify (compile x) : go xs
+
+isIgnorePath :: [Pattern] -> FilePath -> Bool
+isIgnorePath [] _ = False
+isIgnorePath (x:xs) p | match x p = True
+                      | match x (takeFileName p) = True
+                      | otherwise = isIgnorePath xs p
+
+getFileTreeList :: [Pattern] -> FilePath -> IO [FileTree]
+getFileTreeList fpats topdir = do
     isDirectory <- doesDirectoryExist topdir
     unless isDirectory $ createDirectoryIfMissing True topdir
     names <- getDirectoryContents topdir
+    pats <- loadPattern topdir fpats
     let properNames = filter (`notElem` [".", ".."]) names
     forM properNames $ \name -> do
       let path = topdir </> name
-      isDir <- doesDirectoryExist path
-      if isDir then do
-        subTree <- getFileTreeList path
-        return $ Directory name subTree
-      else do
-        isFile <- doesFileExist path
-        if isFile then do
-          size <- fromInteger <$> getFileSize path
-          return $ FileName name size
-        else return Empty
+      if isIgnorePath pats path then return Empty
+                           else do
+        isDir <- doesDirectoryExist path
+        if isDir then do
+          subTree <- getFileTreeList pats path
+          return $ Directory name subTree
+        else do
+          isFile <- doesFileExist path
+          if isFile then do
+            size <- fromInteger <$> getFileSize path
+            return $ FileName name size
+          else return Empty
 
 getFileSize :: FilePath -> IO Integer
 getFileSize path = withFile path ReadMode hFileSize

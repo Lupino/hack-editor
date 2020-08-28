@@ -98,7 +98,7 @@ application th procRoot workRoot = do
   get "/" $ redirect "/index.html"
 
   get "/api/file" $ do
-    trees <- liftIO $ getFileTreeList workRoot
+    trees <- liftIO $ getFileTreeList [] workRoot
     json $ treeListToJSON trees
 
   get (textRoute [ "api", "file" ]) $ do
