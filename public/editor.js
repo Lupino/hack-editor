@@ -6438,7 +6438,7 @@ Main.deleteDoc = function($p1){
       var api = $p1;
       return Fay$$bind$36$uncurried(Main.getCurrentPath,function($p1){
         var currentPath = $p1;
-        return Prelude.$36$$36$uncurried(Prelude.unless(Data.Text.null$36$uncurried(currentPath)),Prelude.$36$$36$uncurried(DOMUtils.confirm(Data.Text.$60$$62$$36$uncurried("删除 ",Data.Text.$60$$62$$36$uncurried(currentPath," ?"))),Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(ProcAPI.removeFile$36$uncurried(api,currentPath),FPromise.then_$36$uncurried(Prelude.$36$$36$uncurried(FPromise.toResolve,Prelude.$_const(Fay$$then$36$uncurried(Fay$$then$36$uncurried(Main.updateTree$36$uncurried(api),Main.showCurrentPath$36$uncurried(false,"")),Main.cleanScreen))))),FPromise.catch$36$uncurried(Fay$$_(FPromise.toReject)(Data.Text.putStrLn))))));
+        return Prelude.$36$$36$uncurried(Prelude.unless(Data.Text.null$36$uncurried(currentPath)),Prelude.$36$$36$uncurried(DOMUtils.confirm(Data.Text.$60$$62$$36$uncurried("删除 ",Data.Text.$60$$62$$36$uncurried(currentPath," ?"))),Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(ProcAPI.removeFile$36$uncurried(api,currentPath),FPromise.then_$36$uncurried(Prelude.$36$$36$uncurried(FPromise.toResolve,Prelude.$_const(Fay$$then$36$uncurried(Fay$$then$36$uncurried(Main.updateTree$36$uncurried(api),Main.showCurrentPath$36$uncurried(false,"")),Main.cleanScreen$36$uncurried("Deleted")))))),FPromise.catch$36$uncurried(Fay$$_(FPromise.toReject)(Data.Text.putStrLn))))));
       });
     });
   };
@@ -6451,6 +6451,11 @@ Main.isDir = function($p1){
 Main.serverPath = function($p1){
   return new Fay$$$(function(){
     return Fay$$jsToFay(["user","Text",[]],Fay$$fayToJs(["user","TreeNode",[]],$p1)['serverPath']);
+  });
+};
+Main.fileSize = function($p1){
+  return new Fay$$$(function(){
+    return Fay$$jsToFay_int(Fay$$fayToJs(["user","TreeNode",[]],$p1)['size']);
   });
 };
 Main.initTree = function($p1){
@@ -6501,6 +6506,9 @@ Main.readOnlyElem = new Fay$$$(function(){
 Main.switchScreenBtn = new Fay$$$(function(){
   return DOM.getElementById$36$uncurried("openTerm");
 });
+Main.editorElem = new Fay$$$(function(){
+  return DOM.getElementById$36$uncurried("editor");
+});
 Main.setShow = function($p1){
   return new Fay$$$(function(){
     if (Fay$$_($p1) === true) {
@@ -6532,7 +6540,7 @@ Main.showFile = function($p1){
           return new Fay$$$(function(){
             var txt = $p2;
             var path = $p1;
-            return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried(Fay$$_(Utils.getMode)(path),txt),Main.addChangeEvent$36$uncurried(api));
+            return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried(Fay$$_(Utils.getMode)(path),txt),Prelude.$36$$36$uncurried(Prelude.when(Utils.isTextFile$36$uncurried(path)),Main.addChangeEvent$36$uncurried(api)));
           });
         };
       };
@@ -6546,7 +6554,7 @@ Main.showFile = function($p1){
 Main.initEditor = new Fay$$$(function(){
   return Fay$$bind$36$uncurried(Main.isEditorInitialized,function($p1){
     var isInitialized = $p1;
-    return Fay$$_(isInitialized) ? Main.getEditor : Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(ACEditor.newEditor$36$uncurried("editor"),ACEditor.setTheme("chrome")),Main.setEditor),Fay$$then$36$uncurried(Main.setIsEditorInitialized,Main.getEditor));
+    return Fay$$_(isInitialized) ? Main.getEditor : Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(ACEditor.newEditor$36$uncurried("editor"),ACEditor.setTheme("chrome")),Main.setEditor),Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.editorElem,Fay$$_(Prelude.flip(DOM.removeClass))("uninitialized")),Fay$$then$36$uncurried(Main.setIsEditorInitialized,Main.getEditor)));
   });
 });
 Main.enableElem = function($p1){
@@ -6569,10 +6577,7 @@ Main.setEditorData = function($p1){
     return new Fay$$$(function(){
       var body = $p2;
       var mode = $p1;
-      return Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.initEditor,ACEditor.removeAllEvent("change")),ACEditor.setValue(body)),ACEditor.setMode(mode))),Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("editor"),function($p1){
-        var el = $p1;
-        return Fay$$_(Data.Text.null$36$uncurried(body)) ? Prelude.$36$$36$uncurried(Prelude.$_void,DOM.addClass$36$uncurried(el,"uninitialized")) : Prelude.$36$$36$uncurried(Prelude.$_void,DOM.removeClass$36$uncurried(el,"uninitialized"));
-      }));
+      return Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.initEditor,ACEditor.removeAllEvent("change")),ACEditor.setValue(body)),ACEditor.setMode(mode)));
     });
   };
 };
@@ -6591,9 +6596,12 @@ Main.showCurrentPath = function($p1){
     });
   };
 };
-Main.cleanScreen = new Fay$$$(function(){
-  return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried("text",""),Fay$$bind$36$uncurried(Main.readOnlyElem,Main.setShow$36$uncurried(false)));
-});
+Main.cleanScreen = function($p1){
+  return new Fay$$$(function(){
+    var e = $p1;
+    return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried("text",e),Fay$$bind$36$uncurried(Main.readOnlyElem,Main.setShow$36$uncurried(false)));
+  });
+};
 Main.treeNodeAction = function($p1){
   return function($p2){
     return new Fay$$$(function(){
@@ -6603,7 +6611,7 @@ Main.treeNodeAction = function($p1){
         var currentPath = new Fay$$$(function(){
           return Main.serverPath$36$uncurried(tn);
         });
-        return Fay$$then$36$uncurried(Main.showCurrentPath$36$uncurried(Main.isDir$36$uncurried(tn),currentPath),Fay$$_(Main.isDir$36$uncurried(tn)) ? Main.cleanScreen : Fay$$_(Utils.isTextFile$36$uncurried(currentPath)) ? Main.showFile$36$uncurried(api) : Fay$$_(Fay$$_(Utils.isImage)(currentPath)) ? Main.showImage$36$uncurried(api) : Main.cleanScreen);
+        return Fay$$then$36$uncurried(Main.showCurrentPath$36$uncurried(Main.isDir$36$uncurried(tn),currentPath),Fay$$_(Main.isDir$36$uncurried(tn)) ? Main.cleanScreen$36$uncurried("Directory") : Fay$$_(Fay$$_(Utils.isImage)(currentPath)) ? Main.showImage$36$uncurried(api) : Fay$$_(Fay$$lt$36$uncurried(Main.fileSize$36$uncurried(tn),1048576)) ? Main.showFile$36$uncurried(api) : Main.cleanScreen$36$uncurried("File to large."));
       })();
     });
   };
@@ -7027,15 +7035,10 @@ FilePath.$60$$47$$62$$36$uncurried = function($p1,$p2){
     return FilePath.append$36$uncurried(f,g);
   });
 };
-Main.showImage$36$uncurried = function($p1){
+Main.cleanScreen$36$uncurried = function($p1){
   return new Fay$$$(function(){
-    var api = $p1;
-    return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried("text",""),Prelude.$36$$36$uncurried(Main.signCurrentPath(api),function($p1){
-      return function($p2){
-        var url = $p2;
-        return Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.readOnlyElem,DOMUtils.setHtml(Data.Text.$60$$62$$36$uncurried("<img src='",Data.Text.$60$$62$$36$uncurried(url,"'>")))),Main.setShow$36$uncurried(true));
-      };
-    }));
+    var e = $p1;
+    return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried("text",e),Fay$$bind$36$uncurried(Main.readOnlyElem,Main.setShow$36$uncurried(false)));
   });
 };
 Main.showFile$36$uncurried = function($p1){
@@ -7047,7 +7050,7 @@ Main.showFile$36$uncurried = function($p1){
           return new Fay$$$(function(){
             var txt = $p2;
             var path = $p1;
-            return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried(Fay$$_(Utils.getMode)(path),txt),Main.addChangeEvent$36$uncurried(api));
+            return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried(Fay$$_(Utils.getMode)(path),txt),Prelude.$36$$36$uncurried(Prelude.when(Utils.isTextFile$36$uncurried(path)),Main.addChangeEvent$36$uncurried(api)));
           });
         };
       };
@@ -7058,9 +7061,20 @@ Main.showFile$36$uncurried = function($p1){
     })();
   });
 };
-Utils.isTextFile$36$uncurried = function($p1){
+Main.fileSize$36$uncurried = function($p1){
   return new Fay$$$(function(){
-    return Fay$$jsToFay_bool(isTextFile(Fay$$fayToJs(["user","FilePath",[]],$p1)));
+    return Fay$$jsToFay_int(Fay$$fayToJs(["user","TreeNode",[]],$p1)['size']);
+  });
+};
+Main.showImage$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    var api = $p1;
+    return Fay$$then$36$uncurried(Main.setEditorData$36$uncurried("text",""),Prelude.$36$$36$uncurried(Main.signCurrentPath(api),function($p1){
+      return function($p2){
+        var url = $p2;
+        return Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.readOnlyElem,DOMUtils.setHtml(Data.Text.$60$$62$$36$uncurried("<img src='",Data.Text.$60$$62$$36$uncurried(url,"'>")))),Main.setShow$36$uncurried(true));
+      };
+    }));
   });
 };
 Main.isDir$36$uncurried = function($p1){
@@ -7084,10 +7098,7 @@ Main.setEditorData$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
     var body = $p2;
     var mode = $p1;
-    return Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.initEditor,ACEditor.removeAllEvent("change")),ACEditor.setValue(body)),ACEditor.setMode(mode))),Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("editor"),function($p1){
-      var el = $p1;
-      return Fay$$_(Data.Text.null$36$uncurried(body)) ? Prelude.$36$$36$uncurried(Prelude.$_void,DOM.addClass$36$uncurried(el,"uninitialized")) : Prelude.$36$$36$uncurried(Prelude.$_void,DOM.removeClass$36$uncurried(el,"uninitialized"));
-    }));
+    return Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.initEditor,ACEditor.removeAllEvent("change")),ACEditor.setValue(body)),ACEditor.setMode(mode)));
   });
 };
 Data.Text.null$36$uncurried = function($p1){
@@ -7157,16 +7168,6 @@ Main.unsaved$36$uncurried = function($p1){
     })();
   });
 };
-DOM.removeClass$36$uncurried = function($p1,$p2){
-  return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","Element",[]],$p1)['classList']['remove'](Fay$$fayToJs(["user","Text",[]],$p2))));
-  });
-};
-DOM.addClass$36$uncurried = function($p1,$p2){
-  return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","Element",[]],$p1).classList['add'](Fay$$fayToJs(["user","Text",[]],$p2))));
-  });
-};
 ACEditor.newEditor$36$uncurried = function($p1){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["user","Editor",[]],ace['edit'](Fay$$fayToJs(["user","Text",[]],$p1))));
@@ -7181,6 +7182,11 @@ Main.addChangeEvent$36$uncurried = function($p1){
   return new Fay$$$(function(){
     var api = $p1;
     return Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.getEditor,Fay$$_(ACEditor.addEvent("change"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.unsaved$36$uncurried(api)))));
+  });
+};
+Utils.isTextFile$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    return Fay$$jsToFay_bool(isTextFile(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
 Data.Text.$60$$62$$36$uncurried = function($p1,$p2){

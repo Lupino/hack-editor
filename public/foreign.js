@@ -12,6 +12,7 @@ function filesToTree(parent, files) {
     } else {
       entry.icon = false;
       entry.isDir = false;
+      entry.size = content;
     }
     result.push(entry);
   }

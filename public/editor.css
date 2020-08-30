@@ -78,11 +78,6 @@ body {
   height: calc(100% + 10px);
 }
 
-#term {
-  background-color: #ebebeb;
-  z-index: 100;
-}
-
 .hide {
   display: none;
 }
@@ -93,6 +88,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
+  background-color: #ebebeb;
+  z-index: 100;
 }
 
 #read-only img {

@@ -140,7 +140,7 @@ deleteDoc api _ = do
   unless (null currentPath) $ do
     confirm ("删除 " <> currentPath <> " ?") $
       void $ API.removeFile api currentPath
-                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> cleanScreen))
+                >>= then_ (toResolve $ const (updateTree api >> showCurrentPath False "" >> cleanScreen "Deleted"))
                 >>= catch (toReject putStrLn)
 
 data TreeNode
@@ -150,6 +150,9 @@ isDir = ffi "%1['isDir']"
 
 serverPath :: TreeNode -> Text
 serverPath = ffi "%1['serverPath']"
+
+fileSize :: TreeNode -> Int
+fileSize = ffi "%1['size']"
 
 initTree :: Text -> (TreeNode -> Fay ()) -> Fay ()
 initTree = ffi "initTree(%1, %2)"
@@ -189,6 +192,9 @@ readOnlyElem = getElementById "read-only"
 switchScreenBtn :: Fay Element
 switchScreenBtn = getElementById "openTerm"
 
+editorElem :: Fay Element
+editorElem = getElementById "editor"
+
 setShow :: Bool -> Element -> Fay ()
 setShow True  = flip removeClass "hide"
 setShow False = flip addClass "hide"
@@ -210,7 +216,7 @@ showFile api = do
             >>= catch (toReject print)
   where doResolve path txt = do
           setEditorData (getMode path) txt
-          addChangeEvent api
+          when (isTextFile path) $ addChangeEvent api
 
 initEditor :: Fay Editor
 initEditor = do
@@ -218,6 +224,7 @@ initEditor = do
   if isInitialized then getEditor
   else do
     newEditor "editor" >>= setTheme "chrome" >>= setEditor
+    editorElem >>= flip removeClass "uninitialized"
     setIsEditorInitialized
     getEditor
 
@@ -232,10 +239,6 @@ setEditorData mode body = do
            >>= setValue body
            >>= setMode mode
 
-  el <- getElementById "editor"
-  if null body then void $ addClass el "uninitialized"
-               else void $ removeClass el "uninitialized"
-
 addChangeEvent :: ProcAPI -> Fay ()
 addChangeEvent api =
   void $ getEditor >>= addEvent "change" (const $ unsaved api)
@@ -248,22 +251,22 @@ showCurrentPath isdir path = do
   enableElem "delete" $ not $ null path
   enableElem "run" $ canProc path
 
-cleanScreen :: Fay ()
-cleanScreen = do
-  setEditorData "text" ""
+cleanScreen :: Text -> Fay ()
+cleanScreen e = do
+  setEditorData "text" e
   readOnlyElem >>= setShow False
 
 treeNodeAction :: ProcAPI -> TreeNode -> Fay ()
 treeNodeAction api tn = do
   showCurrentPath (isDir tn) currentPath
   if isDir tn
-    then cleanScreen
+    then cleanScreen "Directory"
     else
-      if isTextFile currentPath then showFile api
-      else
-        if isImage currentPath
-          then showImage api
-          else cleanScreen
+      if isImage currentPath
+        then showImage api
+        else
+         if fileSize tn < 1048576 then showFile api
+                                  else cleanScreen "File to large."
 
   where currentPath = serverPath tn
 
