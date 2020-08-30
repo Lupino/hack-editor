@@ -76,21 +76,23 @@ main = execParser opts >>= program
 
 program :: Options -> IO ()
 program opts = do
-  th <- newTermHandle
+  tm <- newTermManager
+  gen <- newTermGen
+
   procRoot <- getWorkingDirectory
   changeWorkingDirectory root
   workRoot <- getWorkingDirectory
-  sapp <- scottyApp $ application th procRoot workRoot
+  sapp <- scottyApp $ application tm gen procRoot workRoot
   W.runSettings settings
-    $ websocketsOr WS.defaultConnectionOptions (termServerApp th) sapp
+    $ websocketsOr WS.defaultConnectionOptions (termServerApp tm) sapp
 
   where port = getPort opts
         host = getHost opts
         root = getRoot opts
         settings = W.setPort port . W.setHost (Host host) $ W.defaultSettings
 
-application :: TermHandle -> FilePath -> FilePath -> ScottyM ()
-application th procRoot workRoot = do
+application :: TermManager -> TermGen -> FilePath -> FilePath -> ScottyM ()
+application tm gen procRoot workRoot = do
   middleware logStdout
   middleware staticMid
   middleware staticMid'
@@ -144,16 +146,17 @@ application th procRoot workRoot = do
   post "/api/term/create" $ do
     cols <- param "cols"
     rows <- param "rows"
-    liftIO $ closeTerm th
-    liftIO $ createTerm th (cols, rows)
-    resultOK
-  post "/api/term/resize" $ do
+    TermId tid <- liftIO $ createTerm tm gen (cols, rows)
+    json $ object [ "id" .= tid ]
+  post "/api/term/:tid/resize" $ do
     cols <- param "cols"
     rows <- param "rows"
-    liftIO $ resizeTerm th (cols, rows)
+    tid <- TermId <$> param "tid"
+    liftIO $ resizeTerm tm tid (cols, rows)
     resultOK
-  post "/api/term/close" $ do
-    liftIO $ closeTerm th
+  post "/api/term/:tid/close" $ do
+    tid <- TermId <$> param "tid"
+    liftIO $ closeTerm tm tid
     resultOK
 
   where staticMid = staticPolicy (addBase $ procRoot </> "public")

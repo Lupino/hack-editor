@@ -10,15 +10,15 @@ class ProcApi extends Gateway {
     self.socketURL = protocol + location.host;
   }
   createTerm(cols, rows) {
-    const pathname = '/api/term/create'
+    const pathname = '/api/term/create';
     return this.requestJSON({pathname, method: 'POST', form: {cols, rows}});
   }
-  resizeTerm(cols, rows) {
-    const pathname = '/api/term/resize'
+  resizeTerm(tid, cols, rows) {
+    const pathname = `/api/term/${tid}/resize`;
     return this.requestJSON({pathname, method: 'POST', form: {cols, rows}});
   }
-  closeTerm() {
-    const pathname = '/api/term/close'
+  closeTerm(tid) {
+    const pathname = `/api/term/${tid}/close`
     return this.requestJSON({pathname, method: 'POST'});
   }
   loadFileTree() {

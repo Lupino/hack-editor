@@ -6008,29 +6008,6 @@ ProcAPI.runFile = function($p1){
     });
   };
 };
-ProcAPI.createTerm = function($p1){
-  return function($p2){
-    return function($p3){
-      return new Fay$$$(function(){
-        return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['createTerm'](Fay$$fayToJs_int($p2), Fay$$fayToJs_int($p3))));
-      });
-    };
-  };
-};
-ProcAPI.resizeTerm = function($p1){
-  return function($p2){
-    return function($p3){
-      return new Fay$$$(function(){
-        return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['resizeTerm'](Fay$$fayToJs_int($p2), Fay$$fayToJs_int($p3))));
-      });
-    };
-  };
-};
-ProcAPI.closeTerm = function($p1){
-  return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['closeTerm']()));
-  });
-};
 ProcAPI.loadFileTree = function($p1){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['loadFileTree']()));

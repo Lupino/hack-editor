@@ -37,6 +37,7 @@ library
                      , stm
                      , websockets
                      , utf8-string
+                     , hashable
 
                      , Glob
 

@@ -11,12 +11,13 @@ module HackEditor
   , Proc (..)
   , runProc
 
-  , newTermHandle
-  , TermHandle
+  , TermId (..)
+  , TermGen
+  , newTermGen
+  , TermManager
+  , newTermManager
   , closeTerm
   , createTerm
-  , readTerm
-  , writeTerm
   , resizeTerm
   , termServerApp
   ) where
@@ -31,18 +32,22 @@ import           Control.Monad                  (forM, forever, unless, void,
 import           Control.Monad.STM              (atomically)
 import           Data.Aeson                     (ToJSON (..), Value (..),
                                                  encode, object, (.=))
-import           Data.ByteString                (ByteString)
 import qualified Data.ByteString                as B (readFile)
+import qualified Data.ByteString.Char8          as B (drop, takeWhile)
 import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
                                                        toStrict, writeFile)
 import qualified Data.ByteString.Lazy.UTF8      as LBU (fromString)
 import qualified Data.ByteString.UTF8           as BU (lines, toString)
-import           Data.HashMap.Strict            (union)
-import           Data.Maybe                     (isNothing)
+import           Data.Hashable                  (Hashable, hashWithSalt)
+import           Data.HashMap.Strict            (HashMap, union)
+import qualified Data.HashMap.Strict            as HM
 import qualified Data.Text                      as T (pack)
 import qualified Network.WebSockets             as WS (DataMessage (..),
                                                        ServerApp, acceptRequest,
+                                                       pendingRequest,
                                                        receiveDataMessage,
+                                                       rejectRequest,
+                                                       requestPath,
                                                        sendDataMessage)
 import           Network.WebSockets.Connection  as WS (pingThread)
 import           System.Directory               (createDirectoryIfMissing,
@@ -58,9 +63,9 @@ import           System.FilePath.Glob           (Pattern, compile, match,
                                                  simplify)
 import           System.IO                      (IOMode (ReadMode), hFileSize,
                                                  withFile)
-import           System.Posix.Pty               (Pty, PtyControlCode, closePty,
-                                                 resizePty, spawnWithPty,
-                                                 tryReadPty, writePty)
+import           System.Posix.Pty               (Pty, closePty, resizePty,
+                                                 spawnWithPty, tryReadPty,
+                                                 writePty)
 import           System.Process                 (ProcessHandle,
                                                  terminateProcess)
 import           System.Process.ByteString.Lazy (readProcessWithExitCode)
@@ -160,74 +165,108 @@ runProc (Proc name args) = do
     ExitSuccess   -> return (Right out)
     ExitFailure _ -> return (Left err)
 
-newtype TermHandle = TermHandle (TVar (Maybe (Pty, ProcessHandle)))
+newtype TermId = TermId Int
+  deriving (Show, Eq)
 
-newTermHandle :: IO TermHandle
-newTermHandle = TermHandle <$> newTVarIO Nothing
+instance Hashable TermId where
+  hashWithSalt s (TermId tid) = hashWithSalt s tid
 
-createTerm :: TermHandle -> (Int, Int) -> IO ()
-createTerm (TermHandle h) size = do
-  o <- readTVarIO h
-  when (isNothing o) $ do
-    r <- spawnWithPty Nothing True "bash" [] size
-    atomically $ writeTVar h $ Just r
+newtype TermGen = TermGen (IO TermId)
+newtype TermManager = TermManager (TVar (HashMap TermId (Pty, ProcessHandle)))
 
-callTerm ::(Pty -> IO a) -> TermHandle -> IO a
-callTerm f (TermHandle h) = do
-  o <- readTVarIO h
-  case o of
-    Nothing       -> error "term is terminate"
-    Just (pty, _) -> f pty
+newTermGen :: IO TermGen
+newTermGen = do
+  h <- newTVarIO 1
+  let nextId = atomically $ do
+        r <- readTVar h
+        writeTVar h $ r + 1
+        return $ TermId r
+  return $ TermGen nextId
 
-closeTerm :: TermHandle -> IO ()
-closeTerm (TermHandle h) = do
-  o <- atomically $ do
-    o <- readTVar h
-    writeTVar h Nothing
-    return o
 
-  case o of
+nextTermId :: TermGen -> IO TermId
+nextTermId (TermGen gen) = gen
+
+newTermManager :: IO TermManager
+newTermManager = TermManager <$> newTVarIO HM.empty
+
+createTerm :: TermManager -> TermGen -> (Int, Int) -> IO TermId
+createTerm (TermManager tm) gen size = do
+  r <- spawnWithPty Nothing True "bash" [] size
+  termId <- nextTermId gen
+  atomically $ do
+    hm <- readTVar tm
+    writeTVar tm $ HM.insert termId r hm
+
+  return termId
+
+
+getTerm :: TermManager -> TermId -> IO (Maybe (Pty, ProcessHandle))
+getTerm (TermManager tm) tid = HM.lookup tid <$> readTVarIO tm
+
+getTermPty :: TermManager -> TermId -> IO (Maybe Pty)
+getTermPty tm tid = fmap fst <$> getTerm tm tid
+
+closeTerm :: TermManager -> TermId -> IO ()
+closeTerm (TermManager tm) tid = do
+  mterm <- atomically $ do
+    hm <- readTVar tm
+    let mterm = HM.lookup tid hm
+    writeTVar tm $ HM.delete tid hm
+
+    return mterm
+
+  case mterm of
     Nothing -> return ()
     Just (pty, ph) -> do
       terminateProcess ph
       closePty pty
 
-readTerm :: TermHandle -> IO (Either [PtyControlCode] ByteString)
-readTerm = callTerm tryReadPty
+resizeTerm :: TermManager -> TermId -> (Int, Int) -> IO ()
+resizeTerm tm tid size = do
+  mpty <- getTermPty tm tid
+  case mpty of
+    Nothing  -> error "Term not found."
+    Just pty -> resizePty pty size
 
-writeTerm :: TermHandle -> ByteString -> IO ()
-writeTerm h bs = callTerm (`writePty` bs) h
+-- /api/term/:tid
+termServerApp :: TermManager -> WS.ServerApp
+termServerApp tm pendingConn = do
+  mpty <- getTermPty tm tid
+  case mpty of
+    Nothing -> WS.rejectRequest pendingConn "{\"err\": \"Term not found.\"}"
+    Just pty -> do
+      conn <- WS.acceptRequest pendingConn
+      threads <- newTVarIO []
+      let addThread t = atomically $ do
+            xs <- readTVar threads
+            writeTVar threads (t:xs)
+          killThreads = do
+            xs <- readTVarIO threads
+            void . forkIO $ mapM_ killThread xs
+            closeTerm tm tid
 
-resizeTerm :: TermHandle -> (Int, Int) -> IO ()
-resizeTerm h size = callTerm (`resizePty` size) h
+      thread1 <- forkIO $ WS.pingThread conn 30 (return ())
+      addThread thread1
 
-termServerApp :: TermHandle -> WS.ServerApp
-termServerApp th pendingConn = do
-  conn <- WS.acceptRequest pendingConn
-  threads <- newTVarIO []
-  let addThread t = atomically $ do
-        xs <- readTVar threads
-        writeTVar threads (t:xs)
-      killThreads = do
-        xs <- readTVarIO threads
-        void . forkIO $ mapM_ killThread xs
-  thread1 <- forkIO $ WS.pingThread conn 30 (return ())
-  addThread thread1
+      thread2 <- forkIO $ forever $ do
+        bs0 <- try $ WS.receiveDataMessage conn
+        case bs0 of
+          Left (_ :: SomeException) -> killThreads
+          Right (WS.Text bs _)      -> writePty pty $ LB.toStrict bs
+          Right (WS.Binary bs)      -> writePty pty $ LB.toStrict bs
+      addThread thread2
 
-  thread2 <- forkIO $ forever $ do
-    bs0 <- try $ WS.receiveDataMessage conn
-    case bs0 of
-      Left (_ :: SomeException) -> killThreads
-      Right (WS.Text bs _)      -> writeTerm th $ LB.toStrict bs
-      Right (WS.Binary bs)      -> writeTerm th $ LB.toStrict bs
-  addThread thread2
+      thread3 <- myThreadId
+      addThread thread3
 
-  thread3 <- myThreadId
-  addThread thread3
+      forever $ do
+        bs0 <- try $ tryReadPty pty
+        case bs0 of
+          Left (_ :: SomeException) -> killThreads
+          Right (Left c) -> print c
+          Right (Right bs1) -> WS.sendDataMessage conn (WS.Text (LBU.fromString $ BU.toString bs1) Nothing)
 
-  forever $ do
-    bs0 <- try $ readTerm th
-    case bs0 of
-      Left (_ :: SomeException) -> killThreads
-      Right (Left c) -> print c
-      Right (Right bs1) -> WS.sendDataMessage conn (WS.Text (LBU.fromString $ BU.toString bs1) Nothing)
+  where requestHead = WS.pendingRequest pendingConn
+        rawuri = WS.requestPath requestHead
+        tid = TermId $ read $ BU.toString $ B.drop 10 $ B.takeWhile (/='?') rawuri

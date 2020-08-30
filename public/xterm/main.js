@@ -20,7 +20,7 @@ Terminal.applyAddon(winptyCompat);
 
       var socket;
 
-      var _this = this;
+      var self = this;
       var term;
       var connected = false;
 
@@ -63,7 +63,7 @@ Terminal.applyAddon(winptyCompat);
           var cols = size.cols,
               rows = size.rows;
 
-          api.resizeTerm(cols, rows)
+          api.resizeTerm(seff.tid, cols, rows)
         });
 
         term.open(terminalContainer);
@@ -71,21 +71,22 @@ Terminal.applyAddon(winptyCompat);
         term.fit();
         // term.focus();
         api.createTerm(term.cols, term.rows)
-          .then(function() {
-            return api.signWSPath('/api/term')
+          .then(function(tid) {
+            self.tid = tid;
+            return api.signWSPath('/api/term/' + tid)
           })
           .then(function(socketURL) {
             socket = new WebSocket(socketURL);
-            socket.onopen = _this.runRealTerminal;
+            socket.onopen = self.runRealTerminal;
             socket.onclose = function(e){
               console.log(e);
               connected = false
-              _this.close();
+              self.close();
             };
             socket.onerror = function(e){
               console.log(e);
               connected = false
-              _this.close();
+              self.close();
             };
           });
       }
@@ -96,7 +97,9 @@ Terminal.applyAddon(winptyCompat);
           socket.close()
         }
         hide();
-        api.closeTerm()
+        if (self.tid) {
+          api.closeTerm(self.tid)
+        }
       }
    }
 

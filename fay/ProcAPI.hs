@@ -7,9 +7,6 @@ module ProcAPI
   , uploadFile
   , uploadArchive
   , runFile
-  , createTerm
-  , resizeTerm
-  , closeTerm
   , loadFileTree
   , signWSPath
   , signFilePath
@@ -47,14 +44,6 @@ runFile_ = ffi "%1['runFile'](%2, %3)"
 runFile :: ProcAPI -> FilePath -> [Text] -> Fay Promise
 runFile api fn = runFile_ api fn . pack . show
 
-createTerm :: ProcAPI -> Int -> Int -> Fay Promise
-createTerm = ffi "%1['createTerm'](%2, %3)"
-
-resizeTerm :: ProcAPI -> Int -> Int -> Fay Promise
-resizeTerm = ffi "%1['resizeTerm'](%2, %3)"
-
-closeTerm :: ProcAPI -> Fay Promise
-closeTerm = ffi "%1['closeTerm']()"
 
 loadFileTree :: ProcAPI -> Fay Promise
 loadFileTree = ffi "%1['loadFileTree']()"
