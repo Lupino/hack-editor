@@ -63,7 +63,7 @@ Terminal.applyAddon(winptyCompat);
           var cols = size.cols,
               rows = size.rows;
 
-          api.resizeTerm(seff.tid, cols, rows)
+          api.resizeTerm(self.tid, cols, rows)
         });
 
         term.open(terminalContainer);

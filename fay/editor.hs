@@ -6,7 +6,7 @@ module Main (main) where
 import           ACEditor
 import           Data.Text   (Text, fromString, null, putStrLn, (<>))
 import           DOM         (Element, Event, Timer, addClass, clearTimeout,
-                              getElementById, removeClass, setTimeout)
+                              getElementById, hasClass, removeClass, setTimeout)
 import           DOMUtils
 import           FFI         (ffi)
 import           FilePath    (FilePath, dropFileName, (</>))
@@ -195,6 +195,15 @@ switchScreenBtn = getElementById "openTerm"
 editorElem :: Fay Element
 editorElem = getElementById "editor"
 
+sidebarElem :: Fay Element
+sidebarElem = getElementById "sidebar"
+
+mainElem :: Fay Element
+mainElem = getElementById "main"
+
+menuElem :: Fay Element
+menuElem = getElementById "menu"
+
 setShow :: Bool -> Element -> Fay ()
 setShow True  = flip removeClass "hide"
 setShow False = flip addClass "hide"
@@ -363,6 +372,22 @@ prepareSecrect key next = do
         next sec
     Just sec -> next sec
 
+switchSidebar :: TermManager -> Event -> Fay ()
+switchSidebar tm _ = do
+  el <- sidebarElem
+  has <- hasClass el "hide"
+  setShow has el
+
+  mel <- mainElem
+  if has then removeClass mel "fullscreen"
+         else addClass mel "fullscreen"
+
+
+  mode <- getScreenMode
+  case mode of
+    TermMode   -> openTerm tm
+    EditorMode -> return ()
+
 program :: Text -> Text -> Fay ()
 program key sec = do
   api <- newProcAPI key sec
@@ -396,6 +421,8 @@ program key sec = do
 
   void $ getElementById "resetSecret"
       >>= addEventListener "click" (const $ resetSecret sec key)
+
+  void $ menuElem >>= addEventListener "click" (switchSidebar tm)
 
   loadTree api
 

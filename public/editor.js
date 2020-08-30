@@ -6509,6 +6509,15 @@ Main.switchScreenBtn = new Fay$$$(function(){
 Main.editorElem = new Fay$$$(function(){
   return DOM.getElementById$36$uncurried("editor");
 });
+Main.sidebarElem = new Fay$$$(function(){
+  return DOM.getElementById$36$uncurried("sidebar");
+});
+Main.mainElem = new Fay$$$(function(){
+  return DOM.getElementById$36$uncurried("main");
+});
+Main.menuElem = new Fay$$$(function(){
+  return DOM.getElementById$36$uncurried("menu");
+});
 Main.setShow = function($p1){
   return new Fay$$$(function(){
     if (Fay$$_($p1) === true) {
@@ -6797,6 +6806,34 @@ Main.prepareSecrect = function($p1){
     });
   };
 };
+Main.switchSidebar = function($p1){
+  return function($p2){
+    return new Fay$$$(function(){
+      var tm = $p1;
+      return Fay$$bind$36$uncurried(Main.sidebarElem,function($p1){
+        var el = $p1;
+        return Fay$$bind$36$uncurried(DOM.hasClass$36$uncurried(el,"hide"),function($p1){
+          var has = $p1;
+          return Fay$$then$36$uncurried(Fay$$_(Main.setShow$36$uncurried(has))(el),Fay$$bind$36$uncurried(Main.mainElem,function($p1){
+            var mel = $p1;
+            return Fay$$then$36$uncurried(Fay$$_(has) ? DOM.removeClass$36$uncurried(mel,"fullscreen") : DOM.addClass$36$uncurried(mel,"fullscreen"),Fay$$bind$36$uncurried(Main.getScreenMode,function($p1){
+              var mode = $p1;
+              return (function($tmp1){
+                if (Fay$$_($tmp1) instanceof Main._TermMode) {
+                  return TermManager.openTerm$36$uncurried(tm);
+                }
+                if (Fay$$_($tmp1) instanceof Main._EditorMode) {
+                  return Fay$$return$36$uncurried(Fay$$unit);
+                }
+                return (function(){ throw (["unhandled case",$tmp1]); })();
+              })(mode);
+            }));
+          }));
+        });
+      });
+    });
+  };
+};
 Main.program = function($p1){
   return function($p2){
     return new Fay$$$(function(){
@@ -6806,7 +6843,7 @@ Main.program = function($p1){
         var api = $p1;
         return Fay$$bind$36$uncurried(TermManager.newTermManager$36$uncurried("#terminal-container",api,Main.hideTerm$36$uncurried(api)),function($p1){
           var tm = $p1;
-          return Fay$$then$36$uncurried(Main.setAutoSave$36$uncurried(true),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(DOMUtils.windowAddEventListener("beforeunload"),Prelude.$_const(TermManager.closeTerm$36$uncurried(tm))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("new"),Fay$$_(DOMUtils.addEventListener("click"))(Main.newDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("delete"),Fay$$_(DOMUtils.addEventListener("click"))(Main.deleteDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.saveBtn,Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.saveCurrent$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("upload"),Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.uploadFile(api))(false)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("uploadArchive"),Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.uploadFile(api))(true)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.switchScreen(tm))(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("run"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.runCurrentFile$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("download"),Fay$$_(DOMUtils.addEventListener("click"))(Main.download(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("downloadLink"),Fay$$_(DOMUtils.addEventListener("click"))(Main.downloadLink(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("resetSecret"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Fay$$_(Main.resetSecret$36$uncurried(sec))(key))))),Main.loadTree$36$uncurried(api))))))))))))));
+          return Fay$$then$36$uncurried(Main.setAutoSave$36$uncurried(true),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(DOMUtils.windowAddEventListener("beforeunload"),Prelude.$_const(TermManager.closeTerm$36$uncurried(tm))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("new"),Fay$$_(DOMUtils.addEventListener("click"))(Main.newDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("delete"),Fay$$_(DOMUtils.addEventListener("click"))(Main.deleteDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.saveBtn,Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.saveCurrent$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("upload"),Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.uploadFile(api))(false)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("uploadArchive"),Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.uploadFile(api))(true)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.switchScreen(tm))(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("run"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.runCurrentFile$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("download"),Fay$$_(DOMUtils.addEventListener("click"))(Main.download(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("downloadLink"),Fay$$_(DOMUtils.addEventListener("click"))(Main.downloadLink(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("resetSecret"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Fay$$_(Main.resetSecret$36$uncurried(sec))(key))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.menuElem,Fay$$_(DOMUtils.addEventListener("click"))(Main.switchSidebar(tm)))),Main.loadTree$36$uncurried(api)))))))))))))));
         });
       });
     });
@@ -6930,6 +6967,37 @@ ProcAPI.newProcAPI$36$uncurried = function($p1,$p2){
     return new Fay$$Monad(Fay$$jsToFay(["user","ProcAPI",[]],new ProcJSApi({key: Fay$$fayToJs(["user","Text",[]],$p1), secret: Fay$$fayToJs(["user","Text",[]],$p2)})));
   });
 };
+TermManager.openTerm$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","TermManager",[]],$p1)['init']()));
+  });
+};
+DOM.addClass$36$uncurried = function($p1,$p2){
+  return new Fay$$$(function(){
+    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","Element",[]],$p1).classList['add'](Fay$$fayToJs(["user","Text",[]],$p2))));
+  });
+};
+DOM.removeClass$36$uncurried = function($p1,$p2){
+  return new Fay$$$(function(){
+    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","Element",[]],$p1)['classList']['remove'](Fay$$fayToJs(["user","Text",[]],$p2))));
+  });
+};
+Main.setShow$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    if (Fay$$_($p1) === true) {
+      return Fay$$_(Prelude.flip(DOM.removeClass))("hide");
+    }
+    if (Fay$$_($p1) === false) {
+      return Fay$$_(Prelude.flip(DOM.addClass))("hide");
+    }
+    throw ["unhandled case in setShow",[$p1]];
+  });
+};
+DOM.hasClass$36$uncurried = function($p1,$p2){
+  return new Fay$$$(function(){
+    return new Fay$$Monad(Fay$$jsToFay_bool(Fay$$fayToJs(["user","Element",[]],$p1)['classList']['contains'](Fay$$fayToJs(["user","Text",[]],$p2))));
+  });
+};
 Main.setSecret$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["unknown"],localStorage.setItem(Fay$$fayToJs(["user","Text",[]],$p1), Fay$$fayToJs(["user","Text",[]],$p2))));
@@ -6972,22 +7040,6 @@ Main.updateTree$36$uncurried = function($p1){
   return new Fay$$$(function(){
     var api = $p1;
     return Fay$$then$36$uncurried(Main.clearTree,Main.loadTree$36$uncurried(api));
-  });
-};
-Main.setShow$36$uncurried = function($p1){
-  return new Fay$$$(function(){
-    if (Fay$$_($p1) === true) {
-      return Fay$$_(Prelude.flip(DOM.removeClass))("hide");
-    }
-    if (Fay$$_($p1) === false) {
-      return Fay$$_(Prelude.flip(DOM.addClass))("hide");
-    }
-    throw ["unhandled case in setShow",[$p1]];
-  });
-};
-TermManager.openTerm$36$uncurried = function($p1){
-  return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","TermManager",[]],$p1)['init']()));
   });
 };
 Main.runProcAndShow$36$uncurried = function($p1,$p2,$p3){

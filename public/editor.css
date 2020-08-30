@@ -13,6 +13,10 @@ body {
   background-color: #ebebeb;
 }
 
+#main.fullscreen {
+  left: 0;
+}
+
 #editor {
   position: absolute;
   top: 42px;
@@ -95,4 +99,8 @@ body {
 #read-only img {
   max-width: 98%;
   max-height: 98%;
+}
+
+#menu {
+  cursor: pointer;
 }
