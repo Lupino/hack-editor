@@ -348,7 +348,7 @@ downloadLink api _ =
     prompt "下载地址" url $ const $ return ()
 
 getKeyFromLocation :: Fay Text
-getKeyFromLocation = ffi "/key=([^&]+)/.exec(location.search)[1]"
+getKeyFromLocation = ffi "(function() {var m = /key=([^&]+)/.exec(location.search); return m && m [1] || '';})()"
 
 getSecret_ :: Maybe Text -> (Text -> Maybe Text) -> Text -> Fay (Maybe Text)
 getSecret_ = ffi "(function(nothing, just, key) { var v = localStorage.getItem(key); if (v) {return just(v)} else {return nothing} })(%1, %2, %3)"
@@ -363,6 +363,7 @@ resetSecret :: Text -> Text -> Fay ()
 resetSecret sec = prompt "请输入新密钥" sec . setSecret
 
 prepareSecrect :: Text -> (Text -> Fay ()) -> Fay ()
+prepareSecrect "" next  = next ""
 prepareSecrect key next = do
   msec <- getSecret key
   case msec of

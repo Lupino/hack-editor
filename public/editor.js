@@ -6755,7 +6755,7 @@ Main.downloadLink = function($p1){
   };
 };
 Main.getKeyFromLocation = new Fay$$$(function(){
-  return new Fay$$Monad(Fay$$jsToFay(["user","Text",[]],/key=([^&]+)/.exec(location.search)[1]));
+  return new Fay$$Monad(Fay$$jsToFay(["user","Text",[]],(function() {var m = /key=([^&]+)/.exec(location.search); return m && m [1] || '';})()));
 });
 Main.getSecret_ = function($p1){
   return function($p2){
@@ -6785,6 +6785,10 @@ Main.resetSecret = function($p1){
 Main.prepareSecrect = function($p1){
   return function($p2){
     return new Fay$$$(function(){
+      var next = $p2;
+      if (Fay$$_($p1) === "") {
+        return Fay$$_(next)("");
+      }
       var next = $p2;
       var key = $p1;
       return Fay$$bind$36$uncurried(Fay$$_(Main.getSecret)(key),function($p1){
