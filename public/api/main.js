@@ -37,13 +37,52 @@ class ProcApi extends Gateway {
     const pathname = `/api/file${fileName}`;
     return this.request({method: 'DELETE', pathname});
   }
-  uploadFile(fileName, raw) {
+  async uploadFile(fileName, file) {
     const pathname = `/api/upload${fileName}`;
-    return this.request({method: 'PUT', pathname, raw});
-  }
-  uploadArchive(fileName, raw) {
-    const pathname = `/api/uploadArchive${fileName}`;
-    return this.request({method: 'PUT', pathname, raw});
+    const socketURL = await this.signWSPath(pathname);
+    const totalSize = file.size;
+    const maxPartSize = 10485760;
+    let partSize = Math.floor(totalSize / 10)
+    if (partSize > maxPartSize) {
+      partSize = maxPartSize;
+    }
+    let startSize = 0;
+    let endSize = 0;
+    const elem = document.querySelector('#upload-state');
+    elem.max = totalSize;
+    elem.value = 0;
+    elem.style.display = 'block';
+    return new Promise(function(resolve, reject) {
+      const socket = new WebSocket(socketURL);
+      socket.onopen = function() {
+        console.log('start upload file:', fileName)
+      };
+      socket.onmessage = function(e) {
+        if (endSize < totalSize) {
+          startSize = endSize;
+          elem.value = startSize;
+          endSize += partSize;
+          if (endSize > totalSize) {
+            endSize = totalSize;
+          }
+
+          const blob = file.slice(startSize, endSize);
+
+          socket.send(blob);
+        } else {
+          socket.send('EOF');
+          elem.style.display = 'none';
+          console.log('finished');
+        }
+      }
+      socket.onclose = function(e){
+        resolve();
+      };
+      socket.onerror = function(e){
+        console.log(e);
+        reject(e);
+      };
+    });
   }
   runFile(fileName, raw='[]') {
     let cmd = 'bash'

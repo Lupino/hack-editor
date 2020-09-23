@@ -40,6 +40,8 @@ library
                      , hashable
 
                      , Glob
+                     , transformers
+                     , http-types
 
                      -- required by fay compiler
                      , fay
@@ -67,14 +69,13 @@ executable hack-editor
                      , mime-types
                      , bytestring
                      , optparse-applicative
-                     , zip-archive
                      , directory
                      , http-types
+                     , utf8-string
 
                      , websockets
                      , unix
                      , aeson
-                     , base64-bytestring
   default-language:    Haskell2010
 
 test-suite hack-editor-test

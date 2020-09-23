@@ -12,9 +12,10 @@ import           FFI         (ffi)
 import           FilePath    (FilePath, dropFileName, (</>))
 import           FPromise    (catch, then_, toReject, toResolve)
 import           Prelude     hiding (concat, lines, null, putStrLn, unlines)
-import           ProcAPI     (ProcAPI, loadFileTree, newProcAPI, signFilePath)
-import qualified ProcAPI     as API (readFile, removeFile, runFile,
-                                     uploadArchive, uploadFile, writeFile)
+import           ProcAPI     (File, ProcAPI, loadFileTree, newProcAPI,
+                              signFilePath)
+import qualified ProcAPI     as API (readFile, removeFile, runFile, uploadFile,
+                                     writeFile)
 import           TermManager (TermManager, closeTerm, newTermManager, openTerm)
 import           Utils       (canProc, getMode, isImage, isTextFile)
 
@@ -280,18 +281,17 @@ treeNodeAction api tn = do
   where currentPath = serverPath tn
 
 
-selectFile :: (Text -> Text -> Fay ()) -> Fay ()
+selectFile :: (Text -> File -> Fay ()) -> Fay ()
 selectFile = ffi "selectFile(%1)"
 
-uploadFile :: ProcAPI -> Bool -> Event -> Fay ()
-uploadFile api isArc _ = selectFile action
-  where action :: Text -> Text -> Fay ()
+uploadFile :: ProcAPI -> Event -> Fay ()
+uploadFile api _ = selectFile action
+  where action :: Text -> File -> Fay ()
         action name dat = do
           currentDirectory <- getCurrentDirectory
-          void $ doUpload api (currentDirectory </> name) dat
+          void $ API.uploadFile api (currentDirectory </> name) dat
                      >>= then_ (toResolve $ const $ updateTree api)
                      >>= catch (toReject print)
-        doUpload = if isArc then API.uploadArchive else API.uploadFile
 
 runProcAndShow :: ProcAPI -> FilePath -> [Text] -> Fay ()
 runProcAndShow api fn args =
@@ -405,9 +405,7 @@ program key sec = do
   void $ saveBtn
       >>= addEventListener "click" (const $ saveCurrent api)
   void $ getElementById "upload"
-      >>= addEventListener "click" (uploadFile api False)
-  void $ getElementById "uploadArchive"
-      >>= addEventListener "click" (uploadFile api True)
+      >>= addEventListener "click" (uploadFile api)
   void $ switchScreenBtn
       >>= addEventListener "click" (switchScreen tm api)
 

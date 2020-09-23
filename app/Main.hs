@@ -1,20 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import           Codec.Archive.Zip                    (ZipOption (..),
-                                                       extractFilesFromArchive,
-                                                       toArchive)
 import           Control.Monad.IO.Class               (liftIO)
 import           Data.Aeson                           (object, (.=))
-import           Data.ByteString.Base64.Lazy          (decodeLenient)
 import qualified Data.ByteString.Char8                as BC (unpack)
 import qualified Data.ByteString.Lazy.Char8           as BL (readFile, unpack)
+import qualified Data.ByteString.UTF8                 as BU (toString)
 import           Data.List                            (isPrefixOf)
 import           Data.Streaming.Network.Internal      (HostPreference (Host))
 import qualified Data.Text                            as T (Text, pack, unpack)
 import qualified Data.Text.Lazy                       as TL (pack)
 import           HackEditor
-import           Network.HTTP.Types                   (status404, status500)
+import           Network.HTTP.Types                   (status404, status500,
+                                                       urlDecode)
 import           Network.Mime                         (MimeType,
                                                        defaultMimeLookup)
 import           Network.Wai                          (Request (..))
@@ -26,7 +24,7 @@ import           Network.Wai.Middleware.RequestLogger (logStdout)
 import           Network.Wai.Middleware.Static        (addBase, staticPolicy)
 import qualified Network.WebSockets                   as WS (defaultConnectionOptions)
 import           System.Directory                     (doesFileExist)
-import           System.FilePath                      (dropFileName, (</>))
+import           System.FilePath                      ((</>))
 import           System.Posix.Directory               (changeWorkingDirectory,
                                                        getWorkingDirectory)
 import           Web.Scotty                           (ActionM, RoutePattern,
@@ -84,7 +82,7 @@ program opts = do
   workRoot <- getWorkingDirectory
   sapp <- scottyApp $ application tm gen procRoot workRoot
   W.runSettings settings
-    $ websocketsOr WS.defaultConnectionOptions (termServerApp tm) sapp
+    $ websocketsOr WS.defaultConnectionOptions (serverApp workRoot tm) sapp
 
   where port = getPort opts
         host = getHost opts
@@ -118,20 +116,6 @@ application tm gen procRoot workRoot = do
     path <- filePath workRoot
     wb <- body
     liftIO $ saveFile path wb
-    resultOK
-
-
-  put (textRoute [ "api", "upload" ]) $ do
-    path <- filePath workRoot
-    wb <- decodeLenient <$> body
-    liftIO $ saveFile path wb
-    resultOK
-
-
-  put (textRoute [ "api", "uploadArchive" ]) $ do
-    path <- filePath workRoot
-    wb <- decodeLenient <$> body
-    liftIO $ extractFilesFromArchive [OptDestination (dropFileName path)] $ toArchive wb
     resultOK
 
   delete (textRoute [ "api", "file" ]) $ do
@@ -178,7 +162,7 @@ runProc_ root name = do
 
 filePath :: FilePath -> ActionM FilePath
 filePath root = do
-  path <- param "path"
+  path <- BU.toString . urlDecode True <$> param "path"
   return $ root </> path
 
 textRoute :: [T.Text] -> RoutePattern

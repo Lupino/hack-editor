@@ -19,7 +19,7 @@ module HackEditor
   , closeTerm
   , createTerm
   , resizeTerm
-  , termServerApp
+  , serverApp
   ) where
 
 
@@ -27,14 +27,16 @@ import           Control.Concurrent             (forkIO, killThread, myThreadId)
 import           Control.Concurrent.STM         (TVar, newTVarIO, readTVar,
                                                  readTVarIO, writeTVar)
 import           Control.Exception              (SomeException, try)
-import           Control.Monad                  (forM, forever, unless, void,
-                                                 when)
+import           Control.Monad                  (forM, forever, mzero, unless,
+                                                 void, when)
+import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.STM              (atomically)
+import           Control.Monad.Trans.Maybe      (runMaybeT)
 import           Data.Aeson                     (ToJSON (..), Value (..),
                                                  encode, object, (.=))
 import qualified Data.ByteString                as B (readFile)
-import qualified Data.ByteString.Char8          as B (drop, takeWhile)
-import qualified Data.ByteString.Lazy           as LB (ByteString, empty,
+import qualified Data.ByteString.Char8          as B (drop, take, takeWhile)
+import qualified Data.ByteString.Lazy           as LB (ByteString, empty, hPut,
                                                        toStrict, writeFile)
 import qualified Data.ByteString.Lazy.UTF8      as LBU (fromString)
 import qualified Data.ByteString.UTF8           as BU (lines, toString)
@@ -42,6 +44,7 @@ import           Data.Hashable                  (Hashable, hashWithSalt)
 import           Data.HashMap.Strict            (HashMap, union)
 import qualified Data.HashMap.Strict            as HM
 import qualified Data.Text                      as T (pack)
+import           Network.HTTP.Types             (urlDecode)
 import qualified Network.WebSockets             as WS (DataMessage (..),
                                                        ServerApp, acceptRequest,
                                                        pendingRequest,
@@ -61,8 +64,8 @@ import           System.FilePath                (dropFileName, takeFileName,
                                                  (</>))
 import           System.FilePath.Glob           (Pattern, compile, match,
                                                  simplify)
-import           System.IO                      (IOMode (ReadMode), hFileSize,
-                                                 withFile)
+import           System.IO                      (IOMode (ReadMode, WriteMode),
+                                                 hFileSize, withFile)
 import           System.Posix.Pty               (Pty, closePty, resizePty,
                                                  spawnWithPty, tryReadPty,
                                                  writePty)
@@ -230,8 +233,8 @@ resizeTerm tm tid size = do
     Just pty -> resizePty pty size
 
 -- /api/term/:tid
-termServerApp :: TermManager -> WS.ServerApp
-termServerApp tm pendingConn = do
+termServerApp :: TermId -> TermManager -> WS.ServerApp
+termServerApp tid tm pendingConn = do
   mpty <- getTermPty tm tid
   case mpty of
     Nothing -> WS.rejectRequest pendingConn "{\"err\": \"Term not found.\"}"
@@ -267,6 +270,35 @@ termServerApp tm pendingConn = do
           Right (Left c) -> print c
           Right (Right bs1) -> WS.sendDataMessage conn (WS.Text (LBU.fromString $ BU.toString bs1) Nothing)
 
+-- /api/upload/:filePath
+uploadServerApp :: FilePath -> WS.ServerApp
+uploadServerApp path pendingConn = do
+  conn <- WS.acceptRequest pendingConn
+  WS.sendDataMessage conn (WS.Text "{\"result\": \"OK\"}" Nothing)
+  withFile path WriteMode $ \h -> do
+    void . runMaybeT . forever $ do
+      bs0 <- liftIO $ try $ WS.receiveDataMessage conn
+      case bs0 of
+        Left (_ :: SomeException) -> mzero
+        Right (WS.Text "EOF" _)   -> mzero
+        Right (WS.Binary "EOF")   -> mzero
+        Right (WS.Text bs _)      -> liftIO $ do
+          LB.hPut h bs
+          WS.sendDataMessage conn (WS.Text "{\"result\": \"OK\"}" Nothing)
+        Right (WS.Binary bs)      -> liftIO $ do
+          LB.hPut h bs
+          WS.sendDataMessage conn (WS.Text "{\"result\": \"OK\"}" Nothing)
+
+-- /api/term/:tid
+-- /api/upload/:filePath
+serverApp :: FilePath -> TermManager -> WS.ServerApp
+serverApp workRoot tm pendingConn =
+  case B.take 10 pathname of
+    "/api/term/" -> termServerApp tid tm pendingConn
+    "/api/uploa" -> uploadServerApp path pendingConn
+    _            -> WS.rejectRequest pendingConn "{\"err\": \"no such path.\"}"
   where requestHead = WS.pendingRequest pendingConn
         rawuri = WS.requestPath requestHead
-        tid = TermId $ read $ BU.toString $ B.drop 10 $ B.takeWhile (/='?') rawuri
+        pathname = B.takeWhile (/='?') rawuri
+        path = workRoot </> BU.toString (urlDecode True $ B.drop 12 pathname)
+        tid = TermId $ read $ BU.toString $ B.drop 10 pathname

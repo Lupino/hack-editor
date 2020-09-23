@@ -43,12 +43,7 @@ function selectFile(callback) {
   input.on('change', function(e) {
     if (this.files.length === 1) {
       var file = this.files[0];
-      var reader = new FileReader();
-      reader.onload = function(evt) {
-        var data = evt.target.result;
-        callback(file.name, data.substr(data.indexOf(',') + 1));
-      }
-      reader.readAsDataURL(file);
+      callback(file.name, file);
     }
   });
 

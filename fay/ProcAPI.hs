@@ -4,8 +4,8 @@ module ProcAPI
   , readFile
   , writeFile
   , removeFile
+  , File
   , uploadFile
-  , uploadArchive
   , runFile
   , loadFileTree
   , signWSPath
@@ -19,6 +19,7 @@ import           FPromise  (Promise)
 import           Prelude
 
 data ProcAPI
+data File
 
 newProcAPI :: Text -> Text -> Fay ProcAPI
 newProcAPI = ffi "new ProcJSApi({key: %1, secret: %2})"
@@ -32,11 +33,8 @@ writeFile = ffi "%1['writeFile'](%2, %3)"
 removeFile :: ProcAPI -> FilePath -> Fay Promise
 removeFile = ffi "%1['removeFile'](%2)"
 
-uploadFile :: ProcAPI -> FilePath -> Text -> Fay Promise
+uploadFile :: ProcAPI -> Text -> File -> Fay Promise
 uploadFile = ffi "%1['uploadFile'](%2, %3)"
-
-uploadArchive :: ProcAPI -> FilePath -> Text -> Fay Promise
-uploadArchive = ffi "%1['uploadArchive'](%2, %3)"
 
 runFile_ :: ProcAPI -> FilePath -> Text -> Fay Promise
 runFile_ = ffi "%1['runFile'](%2, %3)"
