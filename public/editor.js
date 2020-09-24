@@ -6258,6 +6258,12 @@ Main._TermMode.prototype.instance = "TermMode";
 Main.TermMode = new Fay$$$(function(){
   return new Main._TermMode();
 });
+Main._DebugMode = function DebugMode(){
+};
+Main._DebugMode.prototype.instance = "DebugMode";
+Main.DebugMode = new Fay$$$(function(){
+  return new Main._DebugMode();
+});
 Main.setSaveState = function($p1){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["unknown"],(function (state) { window['saveState'] = state['instance']})(Fay$$fayToJs(["user","SaveState",[]],$p1))));
@@ -6651,22 +6657,54 @@ Main.runCurrentFile = function($p1){
           var currentPath = new Fay$$$(function(){
             return Data.Text.drop$36$uncurried(1,currentPath$39$);
           });
-          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
         });
       })();
     });
   });
 };
-Main.showTerm = function($p1){
+Main.setDebug = function($p1){
   return new Fay$$$(function(){
-    var tm = $p1;
-    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(true)),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.TermMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("编辑器"))),TermManager.openTerm$36$uncurried(tm))));
+    if (Fay$$_($p1) === false) {
+      return Fay$$bind$36$uncurried(Main.termElem,function($p1){
+        var el = $p1;
+        return Fay$$then$36$uncurried(DOM.removeClass$36$uncurried(el,"debug"),Fay$$bind$36$uncurried(Main.editorElem,function($p1){
+          var ele = $p1;
+          return Fay$$then$36$uncurried(DOM.removeClass$36$uncurried(ele,"debug"),Fay$$bind$36$uncurried(Main.readOnlyElem,function($p1){
+            var elr = $p1;
+            return DOM.removeClass$36$uncurried(elr,"debug");
+          }));
+        }));
+      });
+    }
+    if (Fay$$_($p1) === true) {
+      return Fay$$bind$36$uncurried(Main.termElem,function($p1){
+        var el = $p1;
+        return Fay$$then$36$uncurried(DOM.addClass$36$uncurried(el,"debug"),Fay$$bind$36$uncurried(Main.editorElem,function($p1){
+          var ele = $p1;
+          return Fay$$then$36$uncurried(DOM.addClass$36$uncurried(ele,"debug"),Fay$$bind$36$uncurried(Main.readOnlyElem,function($p1){
+            var elr = $p1;
+            return DOM.addClass$36$uncurried(elr,"debug");
+          }));
+        }));
+      });
+    }
+    throw ["unhandled case in setDebug",[$p1]];
   });
+};
+Main.showTerm = function($p1){
+  return function($p2){
+    return new Fay$$$(function(){
+      var debug = $p2;
+      var tm = $p1;
+      return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(true)),Fay$$then$36$uncurried(Main.setDebug$36$uncurried(debug),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.setScreenMode,Fay$$_(debug) ? Main.DebugMode : Main.TermMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("编辑器"))),TermManager.openTerm$36$uncurried(tm)))));
+    });
+  };
 };
 Main.hideTerm = function($p1){
   return new Fay$$$(function(){
     var api = $p1;
-    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(false)),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("终端"))),Main.updateTree$36$uncurried(api))));
+    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(false)),Fay$$then$36$uncurried(Main.setDebug$36$uncurried(false),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("终端"))),Main.updateTree$36$uncurried(api)))));
   });
 };
 Main.switchScreen = function($p1){
@@ -6681,8 +6719,11 @@ Main.switchScreen = function($p1){
             if (Fay$$_($tmp1) instanceof Main._TermMode) {
               return Main.hideTerm$36$uncurried(api);
             }
+            if (Fay$$_($tmp1) instanceof Main._DebugMode) {
+              return Main.hideTerm$36$uncurried(api);
+            }
             if (Fay$$_($tmp1) instanceof Main._EditorMode) {
-              return Main.showTerm$36$uncurried(tm);
+              return Main.showTerm$36$uncurried(tm,false);
             }
             return (function(){ throw (["unhandled case",$tmp1]); })();
           })(mode);
@@ -6796,6 +6837,9 @@ Main.switchSidebar = function($p1){
                 if (Fay$$_($tmp1) instanceof Main._TermMode) {
                   return TermManager.openTerm$36$uncurried(tm);
                 }
+                if (Fay$$_($tmp1) instanceof Main._DebugMode) {
+                  return TermManager.openTerm$36$uncurried(tm);
+                }
                 if (Fay$$_($tmp1) instanceof Main._EditorMode) {
                   return Fay$$return$36$uncurried(Fay$$unit);
                 }
@@ -6844,6 +6888,9 @@ Fay$$objConcat(Fay$$fayToJsHash,{"Saved": function(type,argTypes,_obj){
 },"TermMode": function(type,argTypes,_obj){
   var obj_ = {"instance": "TermMode"};
   return obj_;
+},"DebugMode": function(type,argTypes,_obj){
+  var obj_ = {"instance": "DebugMode"};
+  return obj_;
 }});
 Fay$$objConcat(Fay$$jsToFayHash,{"Saved": function(type,argTypes,obj){
   return new Main._Saved();
@@ -6855,6 +6902,8 @@ Fay$$objConcat(Fay$$jsToFayHash,{"Saved": function(type,argTypes,obj){
   return new Main._EditorMode();
 },"TermMode": function(type,argTypes,obj){
   return new Main._TermMode();
+},"DebugMode": function(type,argTypes,obj){
+  return new Main._DebugMode();
 }});
 Prelude.$36$$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
@@ -6893,7 +6942,7 @@ Main.runCurrentFile$36$uncurried = function($p1){
           var currentPath = new Fay$$$(function(){
             return Data.Text.drop$36$uncurried(1,currentPath$39$);
           });
-          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
         });
       })();
     });
@@ -6935,7 +6984,7 @@ Main.setAutoSave$36$uncurried = function($p1){
 Main.hideTerm$36$uncurried = function($p1){
   return new Fay$$$(function(){
     var api = $p1;
-    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(false)),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("终端"))),Main.updateTree$36$uncurried(api))));
+    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(false)),Fay$$then$36$uncurried(Main.setDebug$36$uncurried(false),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("终端"))),Main.updateTree$36$uncurried(api)))));
   });
 };
 TermManager.newTermManager$36$uncurried = function($p1,$p2,$p3){
@@ -7011,16 +7060,46 @@ ProcAPI.signFilePath$36$uncurried = function($p1,$p2){
     return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['signFilePath'](Fay$$fayToJs(["user","FilePath",[]],$p2))));
   });
 };
-Main.showTerm$36$uncurried = function($p1){
+Main.showTerm$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
+    var debug = $p2;
     var tm = $p1;
-    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(true)),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.TermMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("编辑器"))),TermManager.openTerm$36$uncurried(tm))));
+    return Fay$$then$36$uncurried(Fay$$bind$36$uncurried(Main.termElem,Main.setShow$36$uncurried(true)),Fay$$then$36$uncurried(Main.setDebug$36$uncurried(debug),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.setScreenMode,Fay$$_(debug) ? Main.DebugMode : Main.TermMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,DOMUtils.setHtml("编辑器"))),TermManager.openTerm$36$uncurried(tm)))));
   });
 };
 Main.updateTree$36$uncurried = function($p1){
   return new Fay$$$(function(){
     var api = $p1;
     return Fay$$then$36$uncurried(Main.clearTree,Main.loadTree$36$uncurried(api));
+  });
+};
+Main.setDebug$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    if (Fay$$_($p1) === false) {
+      return Fay$$bind$36$uncurried(Main.termElem,function($p1){
+        var el = $p1;
+        return Fay$$then$36$uncurried(DOM.removeClass$36$uncurried(el,"debug"),Fay$$bind$36$uncurried(Main.editorElem,function($p1){
+          var ele = $p1;
+          return Fay$$then$36$uncurried(DOM.removeClass$36$uncurried(ele,"debug"),Fay$$bind$36$uncurried(Main.readOnlyElem,function($p1){
+            var elr = $p1;
+            return DOM.removeClass$36$uncurried(elr,"debug");
+          }));
+        }));
+      });
+    }
+    if (Fay$$_($p1) === true) {
+      return Fay$$bind$36$uncurried(Main.termElem,function($p1){
+        var el = $p1;
+        return Fay$$then$36$uncurried(DOM.addClass$36$uncurried(el,"debug"),Fay$$bind$36$uncurried(Main.editorElem,function($p1){
+          var ele = $p1;
+          return Fay$$then$36$uncurried(DOM.addClass$36$uncurried(ele,"debug"),Fay$$bind$36$uncurried(Main.readOnlyElem,function($p1){
+            var elr = $p1;
+            return DOM.addClass$36$uncurried(elr,"debug");
+          }));
+        }));
+      });
+    }
+    throw ["unhandled case in setDebug",[$p1]];
   });
 };
 TermManager.termSend$36$uncurried = function($p1,$p2){

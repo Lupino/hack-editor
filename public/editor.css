@@ -96,9 +96,17 @@ body {
   z-index: 100;
 }
 
+#term.debug {
+  top: calc(100% - 200px);
+}
+
+#read-only.debug, #editor.debug {
+  bottom: 200px;
+}
+
 #read-only img {
-  max-width: 98%;
-  max-height: 98%;
+  max-width: calc(100% - 5px);
+  max-height: calc(100% - 5px);
 }
 
 #menu {

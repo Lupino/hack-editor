@@ -25,7 +25,7 @@ import           Utils       (canProc, getMode, isImage, isJs, isPy, isSh,
 
 data SaveState = Saved | Saving | Unsave
 
-data ScreenMode = EditorMode | TermMode
+data ScreenMode = EditorMode | TermMode | DebugMode
 
 setSaveState :: SaveState -> Fay ()
 setSaveState = ffi "(function (state) { window['saveState'] = state['instance']})(%1)"
@@ -300,22 +300,41 @@ runCurrentFile :: TermManager -> Fay ()
 runCurrentFile tm = do
   currentPath' <- getCurrentPath
   let currentPath = drop 1 currentPath'
-  showTerm tm
+  showTerm tm True
   if isPy currentPath then termSend tm $ "python3 " <> currentPath <> "\n"
   else if isJs currentPath then termSend tm $ "node " <> currentPath <> "\n"
   else if isSh currentPath then termSend tm $ "bash " <> currentPath <> "\n"
   else termSend tm currentPath
 
-showTerm :: TermManager -> Fay ()
-showTerm tm = do
+setDebug :: Bool -> Fay ()
+setDebug False = do
+  el <- termElem
+  removeClass el "debug"
+  ele <- editorElem
+  removeClass ele "debug"
+  elr <- readOnlyElem
+  removeClass elr "debug"
+setDebug True = do
+  el <- termElem
+  addClass el "debug"
+  ele <- editorElem
+  addClass ele "debug"
+  elr <- readOnlyElem
+  addClass elr "debug"
+
+
+showTerm :: TermManager -> Bool -> Fay ()
+showTerm tm debug = do
   termElem >>= setShow True
-  setScreenMode TermMode
+  setDebug debug
+  setScreenMode $ if debug then DebugMode else TermMode
   void $ switchScreenBtn >>= setHtml "编辑器"
   openTerm tm
 
 hideTerm :: ProcAPI -> Fay ()
 hideTerm api = do
   termElem >>= setShow False
+  setDebug False
   setScreenMode EditorMode
   void $ switchScreenBtn >>= setHtml "终端"
   updateTree api
@@ -325,7 +344,8 @@ switchScreen tm api _ = do
   mode <- getScreenMode
   case mode of
     TermMode   -> hideTerm api
-    EditorMode -> showTerm tm
+    DebugMode  -> hideTerm api
+    EditorMode -> showTerm tm False
 
 signCurrentPath :: ProcAPI -> (Text -> Text -> Fay ()) -> Fay ()
 signCurrentPath api next = do
@@ -379,10 +399,10 @@ switchSidebar tm _ = do
   if has then removeClass mel "fullscreen"
          else addClass mel "fullscreen"
 
-
   mode <- getScreenMode
   case mode of
     TermMode   -> openTerm tm
+    DebugMode  -> openTerm tm
     EditorMode -> return ()
 
 program :: Text -> Text -> Fay ()
