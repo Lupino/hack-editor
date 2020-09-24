@@ -4,20 +4,23 @@
 module Main (main) where
 
 import           ACEditor
-import           Data.Text   (Text, fromString, null, putStrLn, (<>))
+import           Data.Text   (Text, drop, fromString, null, putStrLn, (<>))
 import           DOM         (Element, Event, Timer, addClass, clearTimeout,
                               getElementById, hasClass, removeClass, setTimeout)
 import           DOMUtils
 import           FFI         (ffi)
 import           FilePath    (FilePath, dropFileName, (</>))
 import           FPromise    (catch, then_, toReject, toResolve)
-import           Prelude     hiding (concat, lines, null, putStrLn, unlines)
+import           Prelude     hiding (concat, drop, lines, null, putStrLn,
+                              unlines)
 import           ProcAPI     (File, ProcAPI, loadFileTree, newProcAPI,
                               signFilePath)
-import qualified ProcAPI     as API (readFile, removeFile, runFile, uploadFile,
+import qualified ProcAPI     as API (readFile, removeFile, uploadFile,
                                      writeFile)
-import           TermManager (TermManager, closeTerm, newTermManager, openTerm)
-import           Utils       (canProc, getMode, isImage, isTextFile)
+import           TermManager (TermManager, closeTerm, newTermManager, openTerm,
+                              termSend)
+import           Utils       (canProc, getMode, isImage, isJs, isPy, isSh,
+                              isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
@@ -293,22 +296,15 @@ uploadFile api _ = selectFile action
                      >>= then_ (toResolve $ const $ updateTree api)
                      >>= catch (toReject print)
 
-runProcAndShow :: ProcAPI -> FilePath -> [Text] -> Fay ()
-runProcAndShow api fn args =
-  void $ API.runFile api fn args
-    >>= then_ (toResolve showResult)
-    >>= catch (toReject showResult)
-
-  where showResult :: Text -> Fay ()
-        showResult txt = do
-          updateTree api
-          void $ getElementById "proc-result-message" >>= setHtml txt
-          getModal "#proc-result" >>= showModal
-
-runCurrentFile :: ProcAPI -> Fay ()
-runCurrentFile api = do
-  currentPath <- getCurrentPath
-  runProcAndShow api currentPath []
+runCurrentFile :: TermManager -> Fay ()
+runCurrentFile tm = do
+  currentPath' <- getCurrentPath
+  let currentPath = drop 1 currentPath'
+  showTerm tm
+  if isPy currentPath then termSend tm $ "python3 " <> currentPath <> "\n"
+  else if isJs currentPath then termSend tm $ "node " <> currentPath <> "\n"
+  else if isSh currentPath then termSend tm $ "bash " <> currentPath <> "\n"
+  else termSend tm currentPath
 
 showTerm :: TermManager -> Fay ()
 showTerm tm = do
@@ -410,7 +406,7 @@ program key sec = do
       >>= addEventListener "click" (switchScreen tm api)
 
   void $ getElementById "run"
-      >>= addEventListener "click" (const $ runCurrentFile api)
+      >>= addEventListener "click" (const $ runCurrentFile tm)
 
   void $ getElementById "download"
       >>= addEventListener "click" (download api)

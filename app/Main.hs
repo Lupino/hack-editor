@@ -4,15 +4,14 @@ module Main where
 import           Control.Monad.IO.Class               (liftIO)
 import           Data.Aeson                           (object, (.=))
 import qualified Data.ByteString.Char8                as BC (unpack)
-import qualified Data.ByteString.Lazy.Char8           as BL (readFile, unpack)
+import qualified Data.ByteString.Lazy.Char8           as BL (readFile)
 import qualified Data.ByteString.UTF8                 as BU (toString)
 import           Data.List                            (isPrefixOf)
 import           Data.Streaming.Network.Internal      (HostPreference (Host))
 import qualified Data.Text                            as T (Text, pack, unpack)
 import qualified Data.Text.Lazy                       as TL (pack)
 import           HackEditor
-import           Network.HTTP.Types                   (status404, status500,
-                                                       urlDecode)
+import           Network.HTTP.Types                   (status404, urlDecode)
 import           Network.Mime                         (MimeType,
                                                        defaultMimeLookup)
 import           Network.Wai                          (Request (..))
@@ -123,10 +122,6 @@ application tm gen procRoot workRoot = do
     liftIO $ deleteFile path
     resultOK
 
-  post (textRoute [ "api", "python" ]) $ runProc_ workRoot Python
-  post (textRoute [ "api", "node" ])   $ runProc_ workRoot Node
-  post (textRoute [ "api", "bash" ])   $ runProc_ workRoot Bash
-
   post "/api/term/create" $ do
     cols <- param "cols"
     rows <- param "rows"
@@ -146,19 +141,6 @@ application tm gen procRoot workRoot = do
   where staticMid = staticPolicy (addBase $ procRoot </> "public")
         staticMid' = staticPolicy (addBase workRoot)
         resultOK = json $ object [ "result" .= ("OK" :: String) ]
-
-runProc_ :: FilePath -> ProcName -> ActionM ()
-runProc_ root name = do
-  path <- filePath root
-  wb <- body
-  setHeader "Content-Type" $ TL.pack "plain/text"
-
-  let args = read $ BL.unpack wb
-  liftIO $ changeWorkingDirectory root
-  fc <- liftIO $ runProc $ Proc name (path:args)
-  case fc of
-    Left err  -> status status500 >> raw err
-    Right out -> raw out
 
 filePath :: FilePath -> ActionM FilePath
 filePath root = do

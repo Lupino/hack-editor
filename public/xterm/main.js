@@ -101,6 +101,23 @@ Terminal.applyAddon(winptyCompat);
           api.closeTerm(self.tid)
         }
       }
+
+      this.send = function(cmd) {
+        if (connected) {
+          term.send(cmd);
+        } else {
+          function waitsend() {
+            setTimeout(function() {
+              if (connected) {
+                term.send(cmd);
+              } else {
+                waitsend();
+              }
+            }, 100);
+          }
+          waitsend();
+        }
+      }
    }
 
    window.JSTermManager = TermManager;

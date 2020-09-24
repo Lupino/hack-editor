@@ -3,6 +3,7 @@ module TermManager
   , newTermManager
   , openTerm
   , closeTerm
+  , termSend
   ) where
 
 import           Data.Text (Text)
@@ -20,3 +21,6 @@ openTerm = ffi "%1['init']()"
 
 closeTerm :: TermManager -> Fay ()
 closeTerm = ffi "%1['close']()"
+
+termSend :: TermManager -> Text -> Fay ()
+termSend = ffi "%1['send'](%2)"

@@ -5981,24 +5981,6 @@ ProcAPI.uploadFile = function($p1){
     };
   };
 };
-ProcAPI.runFile_ = function($p1){
-  return function($p2){
-    return function($p3){
-      return new Fay$$$(function(){
-        return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['runFile'](Fay$$fayToJs(["user","FilePath",[]],$p2), Fay$$fayToJs(["user","Text",[]],$p3))));
-      });
-    };
-  };
-};
-ProcAPI.runFile = function($p1){
-  return function($p2){
-    return new Fay$$$(function(){
-      var fn = $p2;
-      var api = $p1;
-      return Fay$$_(Prelude.$46$(Fay$$_(ProcAPI.runFile_(api))(fn)))(Fay$$_(Prelude.$46$(Data.Text.pack))(Prelude.show));
-    });
-  };
-};
 ProcAPI.loadFileTree = function($p1){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],Fay$$fayToJs(["user","ProcAPI",[]],$p1)['loadFileTree']()));
@@ -6037,6 +6019,13 @@ TermManager.closeTerm = function($p1){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","TermManager",[]],$p1)['close']()));
   });
+};
+TermManager.termSend = function($p1){
+  return function($p2){
+    return new Fay$$$(function(){
+      return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","TermManager",[]],$p1)['send'](Fay$$fayToJs(["user","Text",[]],$p2))));
+    });
+  };
 };
 var Regex = {};
 Regex._G = function G(){
@@ -6181,6 +6170,15 @@ Utils.isTextFile = function($p1){
 };
 Utils.canProc = new Fay$$$(function(){
   return Regex.test(Regex.newRegex_$36$uncurried("\\.(js|sh|py)$",Fay$$list([Regex.I])));
+});
+Utils.isPy = new Fay$$$(function(){
+  return Regex.test(Regex.newRegex_$36$uncurried("\\.py$",Fay$$list([Regex.I])));
+});
+Utils.isJs = new Fay$$$(function(){
+  return Regex.test(Regex.newRegex_$36$uncurried("\\.js$",Fay$$list([Regex.I])));
+});
+Utils.isSh = new Fay$$$(function(){
+  return Regex.test(Regex.newRegex_$36$uncurried("\\.sh$",Fay$$list([Regex.I])));
 });
 Utils.modeMap = new Fay$$$(function(){
   return Fay$$list([Fay$$list(["javascript",Regex.newRegex_$36$uncurried("\\.js$",Fay$$list([Regex.I]))]),Fay$$list(["markdown",Regex.newRegex_$36$uncurried("\\.(md|markdown|rst)$",Fay$$list([Regex.I]))]),Fay$$list(["html",Regex.newRegex_$36$uncurried("\\.(html|htm)$",Fay$$list([Regex.I]))]),Fay$$list(["css",Regex.newRegex_$36$uncurried("\\.css$",Fay$$list([Regex.I]))]),Fay$$list(["yaml",Regex.newRegex_$36$uncurried("\\.(yaml|yml)$",Fay$$list([Regex.I]))]),Fay$$list(["xml",Regex.newRegex_$36$uncurried("\\.(svg|xml)$",Fay$$list([Regex.I]))]),Fay$$list(["json",Regex.newRegex_$36$uncurried("\\.json$",Fay$$list([Regex.I]))]),Fay$$list(["python",Regex.newRegex_$36$uncurried("\\.py$",Fay$$list([Regex.I]))]),Fay$$list(["tex",Regex.newRegex_$36$uncurried("\\.(tex|aux)$",Fay$$list([Regex.I]))]),Fay$$list(["sh",Regex.newRegex_$36$uncurried("\\.sh$",Fay$$list([Regex.I]))])]);
@@ -6643,32 +6641,19 @@ Main.uploadFile = function($p1){
     });
   };
 };
-Main.runProcAndShow = function($p1){
-  return function($p2){
-    return function($p3){
-      return new Fay$$$(function(){
-        var args = $p3;
-        var fn = $p2;
-        var api = $p1;
-        return (function(){
-          var showResult = function($p1){
-            return new Fay$$$(function(){
-              var txt = $p1;
-              return Fay$$then$36$uncurried(Main.updateTree$36$uncurried(api),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("proc-result-message"),DOMUtils.setHtml(txt))),Fay$$bind$36$uncurried(DOMUtils.getModal$36$uncurried$36$uncurried("#proc-result"),DOMUtils.showModal)));
-            });
-          };
-          return Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$_(ProcAPI.runFile$36$uncurried(api,fn))(args),FPromise.then_$36$uncurried(Fay$$_(FPromise.toResolve)(showResult))),FPromise.catch$36$uncurried(Fay$$_(FPromise.toReject)(showResult))));
-        })();
-      });
-    };
-  };
-};
 Main.runCurrentFile = function($p1){
   return new Fay$$$(function(){
-    var api = $p1;
+    var tm = $p1;
     return Fay$$bind$36$uncurried(Main.getCurrentPath,function($p1){
-      var currentPath = $p1;
-      return Main.runProcAndShow$36$uncurried(api,currentPath,null);
+      var currentPath$39$ = $p1;
+      return (function(){
+        return new Fay$$$(function(){
+          var currentPath = new Fay$$$(function(){
+            return Data.Text.drop$36$uncurried(1,currentPath$39$);
+          });
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
+        });
+      })();
     });
   });
 };
@@ -6832,7 +6817,7 @@ Main.program = function($p1){
         var api = $p1;
         return Fay$$bind$36$uncurried(TermManager.newTermManager$36$uncurried("#terminal-container",api,Main.hideTerm$36$uncurried(api)),function($p1){
           var tm = $p1;
-          return Fay$$then$36$uncurried(Main.setAutoSave$36$uncurried(true),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(DOMUtils.windowAddEventListener("beforeunload"),Prelude.$_const(TermManager.closeTerm$36$uncurried(tm))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("new"),Fay$$_(DOMUtils.addEventListener("click"))(Main.newDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("delete"),Fay$$_(DOMUtils.addEventListener("click"))(Main.deleteDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.saveBtn,Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.saveCurrent$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("upload"),Fay$$_(DOMUtils.addEventListener("click"))(Main.uploadFile(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.switchScreen(tm))(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("run"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.runCurrentFile$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("download"),Fay$$_(DOMUtils.addEventListener("click"))(Main.download(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("downloadLink"),Fay$$_(DOMUtils.addEventListener("click"))(Main.downloadLink(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("resetSecret"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Fay$$_(Main.resetSecret$36$uncurried(sec))(key))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.menuElem,Fay$$_(DOMUtils.addEventListener("click"))(Main.switchSidebar(tm)))),Main.loadTree$36$uncurried(api))))))))))))));
+          return Fay$$then$36$uncurried(Main.setAutoSave$36$uncurried(true),Fay$$then$36$uncurried(Main.setScreenMode$36$uncurried(Main.EditorMode),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(DOMUtils.windowAddEventListener("beforeunload"),Prelude.$_const(TermManager.closeTerm$36$uncurried(tm))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("new"),Fay$$_(DOMUtils.addEventListener("click"))(Main.newDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("delete"),Fay$$_(DOMUtils.addEventListener("click"))(Main.deleteDoc(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.saveBtn,Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.saveCurrent$36$uncurried(api))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("upload"),Fay$$_(DOMUtils.addEventListener("click"))(Main.uploadFile(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.switchScreenBtn,Fay$$_(DOMUtils.addEventListener("click"))(Fay$$_(Main.switchScreen(tm))(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("run"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Main.runCurrentFile$36$uncurried(tm))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("download"),Fay$$_(DOMUtils.addEventListener("click"))(Main.download(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("downloadLink"),Fay$$_(DOMUtils.addEventListener("click"))(Main.downloadLink(api)))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("resetSecret"),Fay$$_(DOMUtils.addEventListener("click"))(Prelude.$36$$36$uncurried(Prelude.$_const,Fay$$_(Main.resetSecret$36$uncurried(sec))(key))))),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Main.menuElem,Fay$$_(DOMUtils.addEventListener("click"))(Main.switchSidebar(tm)))),Main.loadTree$36$uncurried(api))))))))))))));
         });
       });
     });
@@ -6900,10 +6885,17 @@ DOM.getElementById$36$uncurried = function($p1){
 };
 Main.runCurrentFile$36$uncurried = function($p1){
   return new Fay$$$(function(){
-    var api = $p1;
+    var tm = $p1;
     return Fay$$bind$36$uncurried(Main.getCurrentPath,function($p1){
-      var currentPath = $p1;
-      return Main.runProcAndShow$36$uncurried(api,currentPath,null);
+      var currentPath$39$ = $p1;
+      return (function(){
+        return new Fay$$$(function(){
+          var currentPath = new Fay$$$(function(){
+            return Data.Text.drop$36$uncurried(1,currentPath$39$);
+          });
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
+        });
+      })();
     });
   });
 };
@@ -7031,37 +7023,19 @@ Main.updateTree$36$uncurried = function($p1){
     return Fay$$then$36$uncurried(Main.clearTree,Main.loadTree$36$uncurried(api));
   });
 };
-Main.runProcAndShow$36$uncurried = function($p1,$p2,$p3){
+TermManager.termSend$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
-    var args = $p3;
-    var fn = $p2;
-    var api = $p1;
-    return (function(){
-      var showResult = function($p1){
-        return new Fay$$$(function(){
-          var txt = $p1;
-          return Fay$$then$36$uncurried(Main.updateTree$36$uncurried(api),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(DOM.getElementById$36$uncurried("proc-result-message"),DOMUtils.setHtml(txt))),Fay$$bind$36$uncurried(DOMUtils.getModal$36$uncurried$36$uncurried("#proc-result"),DOMUtils.showModal)));
-        });
-      };
-      return Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$_(ProcAPI.runFile$36$uncurried(api,fn))(args),FPromise.then_$36$uncurried(Fay$$_(FPromise.toResolve)(showResult))),FPromise.catch$36$uncurried(Fay$$_(FPromise.toReject)(showResult))));
-    })();
+    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","TermManager",[]],$p1)['send'](Fay$$fayToJs(["user","Text",[]],$p2))));
   });
 };
-ProcAPI.runFile$36$uncurried = function($p1,$p2){
+Data.Text.$60$$62$$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
-    var fn = $p2;
-    var api = $p1;
-    return Fay$$_(Prelude.$46$(Fay$$_(ProcAPI.runFile_(api))(fn)))(Fay$$_(Prelude.$46$(Data.Text.pack))(Prelude.show));
+    return Fay$$jsToFay(["user","Text",[]],Fay$$fayToJs(["user","Text",[]],$p1) + Fay$$fayToJs(["user","Text",[]],$p2));
   });
 };
-DOMUtils.getModal$36$uncurried$36$uncurried = function($p1){
+Data.Text.drop$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["user","Modal",[]],UIkit['modal'](Fay$$fayToJs(["user","Text",[]],$p1))));
-  });
-};
-DOMUtils.getModal$36$uncurried = function($p1){
-  return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["user","Modal",[]],UIkit['modal'](Fay$$fayToJs(["user","Text",[]],$p1))));
+    return Fay$$jsToFay(["user","Text",[]],Fay$$fayToJs(["user","Text",[]],$p2).substring(Fay$$fayToJs_int($p1)));
   });
 };
 Main.selectFile$36$uncurried = function($p1){
@@ -7235,11 +7209,6 @@ Utils.isTextFile$36$uncurried = function($p1){
     return Fay$$jsToFay_bool(isTextFile(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
-Data.Text.$60$$62$$36$uncurried = function($p1,$p2){
-  return new Fay$$$(function(){
-    return Fay$$jsToFay(["user","Text",[]],Fay$$fayToJs(["user","Text",[]],$p1) + Fay$$fayToJs(["user","Text",[]],$p2));
-  });
-};
 Main.initTree$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["unknown"],initTree(Fay$$fayToJs(["user","Text",[]],$p1), Fay$$fayToJs(["function",[["user","TreeNode",[]],["action",[["unknown"]]]]],$p2))));
@@ -7323,6 +7292,11 @@ FPromise.fromResolve$36$uncurried$36$uncurried = function($p1){
 FPromise.newPromise_$36$uncurried$36$uncurried = function($p1){
   return new Fay$$$(function(){
     return new Fay$$Monad(Fay$$jsToFay(["user","Promise",[]],new Promise(Fay$$fayToJs(["function",[["function",[["unknown"],["action",[["unknown"]]]]],["function",[["user","Text",[]],["action",[["unknown"]]]]],["action",[["unknown"]]]]],$p1))));
+  });
+};
+DOMUtils.getModal$36$uncurried$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    return new Fay$$Monad(Fay$$jsToFay(["user","Modal",[]],UIkit['modal'](Fay$$fayToJs(["user","Text",[]],$p1))));
   });
 };
 DOMUtils.querySelector$36$uncurried$36$uncurried = function($p1){

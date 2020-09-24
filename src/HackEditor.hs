@@ -7,9 +7,6 @@ module HackEditor
   , getFileTreeList
   , saveFile
   , deleteFile
-  , ProcName (..)
-  , Proc (..)
-  , runProc
 
   , TermId (..)
   , TermGen
@@ -23,55 +20,52 @@ module HackEditor
   ) where
 
 
-import           Control.Concurrent             (forkIO, killThread, myThreadId)
-import           Control.Concurrent.STM         (TVar, newTVarIO, readTVar,
-                                                 readTVarIO, writeTVar)
-import           Control.Exception              (SomeException, try)
-import           Control.Monad                  (forM, forever, mzero, unless,
-                                                 void, when)
-import           Control.Monad.IO.Class         (liftIO)
-import           Control.Monad.STM              (atomically)
-import           Control.Monad.Trans.Maybe      (runMaybeT)
-import           Data.Aeson                     (ToJSON (..), Value (..),
-                                                 encode, object, (.=))
-import qualified Data.ByteString                as B (readFile)
-import qualified Data.ByteString.Char8          as B (drop, take, takeWhile)
-import qualified Data.ByteString.Lazy           as LB (ByteString, empty, hPut,
-                                                       toStrict, writeFile)
-import qualified Data.ByteString.Lazy.UTF8      as LBU (fromString)
-import qualified Data.ByteString.UTF8           as BU (lines, toString)
-import           Data.Hashable                  (Hashable, hashWithSalt)
-import           Data.HashMap.Strict            (HashMap, union)
-import qualified Data.HashMap.Strict            as HM
-import qualified Data.Text                      as T (pack)
-import           Network.HTTP.Types             (urlDecode)
-import qualified Network.WebSockets             as WS (DataMessage (..),
-                                                       ServerApp, acceptRequest,
-                                                       pendingRequest,
-                                                       receiveDataMessage,
-                                                       rejectRequest,
-                                                       requestPath,
-                                                       sendDataMessage)
-import           Network.WebSockets.Connection  as WS (pingThread)
-import           System.Directory               (createDirectoryIfMissing,
-                                                 doesDirectoryExist,
-                                                 doesFileExist,
-                                                 getDirectoryContents,
-                                                 removeDirectoryRecursive,
-                                                 removeFile)
-import           System.Exit                    (ExitCode (..))
-import           System.FilePath                (dropFileName, takeFileName,
-                                                 (</>))
-import           System.FilePath.Glob           (Pattern, compile, match,
-                                                 simplify)
-import           System.IO                      (IOMode (ReadMode, WriteMode),
-                                                 hFileSize, withFile)
-import           System.Posix.Pty               (Pty, closePty, resizePty,
-                                                 spawnWithPty, tryReadPty,
-                                                 writePty)
-import           System.Process                 (ProcessHandle,
-                                                 terminateProcess)
-import           System.Process.ByteString.Lazy (readProcessWithExitCode)
+import           Control.Concurrent            (forkIO, killThread, myThreadId)
+import           Control.Concurrent.STM        (TVar, newTVarIO, readTVar,
+                                                readTVarIO, writeTVar)
+import           Control.Exception             (SomeException, try)
+import           Control.Monad                 (forM, forever, mzero, unless,
+                                                void, when)
+import           Control.Monad.IO.Class        (liftIO)
+import           Control.Monad.STM             (atomically)
+import           Control.Monad.Trans.Maybe     (runMaybeT)
+import           Data.Aeson                    (ToJSON (..), Value (..), encode,
+                                                object, (.=))
+import qualified Data.ByteString               as B (readFile)
+import qualified Data.ByteString.Char8         as B (drop, take, takeWhile)
+import qualified Data.ByteString.Lazy          as LB (ByteString, hPut,
+                                                      toStrict, writeFile)
+import qualified Data.ByteString.Lazy.UTF8     as LBU (fromString)
+import qualified Data.ByteString.UTF8          as BU (lines, toString)
+import           Data.Hashable                 (Hashable, hashWithSalt)
+import           Data.HashMap.Strict           (HashMap, union)
+import qualified Data.HashMap.Strict           as HM
+import qualified Data.Text                     as T (pack)
+import           Network.HTTP.Types            (urlDecode)
+import qualified Network.WebSockets            as WS (DataMessage (..),
+                                                      ServerApp, acceptRequest,
+                                                      pendingRequest,
+                                                      receiveDataMessage,
+                                                      rejectRequest,
+                                                      requestPath,
+                                                      sendDataMessage)
+import           Network.WebSockets.Connection as WS (pingThread)
+import           System.Directory              (createDirectoryIfMissing,
+                                                doesDirectoryExist,
+                                                doesFileExist,
+                                                getDirectoryContents,
+                                                removeDirectoryRecursive,
+                                                removeFile)
+import           System.FilePath               (dropFileName, takeFileName,
+                                                (</>))
+import           System.FilePath.Glob          (Pattern, compile, match,
+                                                simplify)
+import           System.IO                     (IOMode (ReadMode, WriteMode),
+                                                hFileSize, withFile)
+import           System.Posix.Pty              (Pty, closePty, resizePty,
+                                                spawnWithPty, tryReadPty,
+                                                writePty)
+import           System.Process                (ProcessHandle, terminateProcess)
 
 data FileTree = Directory String [FileTree] | FileName String Int | Empty
   deriving (Show)
@@ -152,21 +146,6 @@ deleteFile fn = do
   when isDirectory $ removeDirectoryRecursive fn
   fileExists <- doesFileExist fn
   when fileExists $ removeFile fn
-
-data ProcName = Python | Node | Bash
-data Proc = Proc ProcName [String]
-
-getProcName :: ProcName -> FilePath
-getProcName Python = "python3"
-getProcName Node   = "node"
-getProcName Bash   = "bash"
-
-runProc :: Proc -> IO (Either LB.ByteString LB.ByteString)
-runProc (Proc name args) = do
-  (code, out, err) <- readProcessWithExitCode (getProcName name) args LB.empty
-  case code of
-    ExitSuccess   -> return (Right out)
-    ExitFailure _ -> return (Left err)
 
 newtype TermId = TermId Int
   deriving (Show, Eq)

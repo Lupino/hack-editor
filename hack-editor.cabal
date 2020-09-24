@@ -30,7 +30,6 @@ library
                      , text
                      , unordered-containers
                      , bytestring
-                     , process-extras
 
                      , posix-pty
                      , process

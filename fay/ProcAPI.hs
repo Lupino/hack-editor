@@ -6,13 +6,12 @@ module ProcAPI
   , removeFile
   , File
   , uploadFile
-  , runFile
   , loadFileTree
   , signWSPath
   , signFilePath
   ) where
 
-import           Data.Text (Text, pack)
+import           Data.Text (Text)
 import           FFI       (ffi)
 import           FilePath  (FilePath)
 import           FPromise  (Promise)
@@ -35,13 +34,6 @@ removeFile = ffi "%1['removeFile'](%2)"
 
 uploadFile :: ProcAPI -> Text -> File -> Fay Promise
 uploadFile = ffi "%1['uploadFile'](%2, %3)"
-
-runFile_ :: ProcAPI -> FilePath -> Text -> Fay Promise
-runFile_ = ffi "%1['runFile'](%2, %3)"
-
-runFile :: ProcAPI -> FilePath -> [Text] -> Fay Promise
-runFile api fn = runFile_ api fn . pack . show
-
 
 loadFileTree :: ProcAPI -> Fay Promise
 loadFileTree = ffi "%1['loadFileTree']()"

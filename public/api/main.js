@@ -84,17 +84,6 @@ class ProcApi extends Gateway {
       };
     });
   }
-  runFile(fileName, raw='[]') {
-    let cmd = 'bash'
-    if (/.py$/.exec(fileName)) {
-      cmd = 'python'
-    } else if (/.js$/.exec(fileName)) {
-      cmd = 'node'
-    }
-    const pathname = `/api/${cmd}${fileName}`
-    return this.request({pathname, method: 'POST', raw}).then((rsp) => rsp.text())
-  }
-
   async signPathName(method, pathname) {
     const signData = {
       'key': this.key,

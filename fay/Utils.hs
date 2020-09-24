@@ -6,6 +6,9 @@ module Utils
   , getMode
   , canProc
   , isImage
+  , isPy
+  , isSh
+  , isJs
   ) where
 
 import           Data.Text (Text, fromString)
@@ -19,6 +22,15 @@ isTextFile = ffi "isTextFile(%1)"
 
 canProc :: FilePath -> Bool
 canProc = test (newRegex_ "\\.(js|sh|py)$" [I])
+
+isPy :: FilePath -> Bool
+isPy = test (newRegex_ "\\.py$" [I])
+
+isJs :: FilePath -> Bool
+isJs = test (newRegex_ "\\.js$" [I])
+
+isSh :: FilePath -> Bool
+isSh = test (newRegex_ "\\.sh$" [I])
 
 modeMap :: [(Text, Regex)]
 modeMap = [ ("javascript", newRegex_ "\\.js$" [I]),
