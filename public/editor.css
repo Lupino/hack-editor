@@ -124,3 +124,14 @@ body {
   height: 10px;
   display: none;
 }
+
+#refresh, #close-term {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  display: inline-block;
+  z-index: 1000;
+}

@@ -208,6 +208,12 @@ mainElem = getElementById "main"
 menuElem :: Fay Element
 menuElem = getElementById "menu"
 
+refreshElem :: Fay Element
+refreshElem = getElementById "refresh"
+
+closeTermElem :: Fay Element
+closeTermElem = getElementById "close-term"
+
 setShow :: Bool -> Element -> Fay ()
 setShow True  = flip removeClass "hide"
 setShow False = flip addClass "hide"
@@ -438,6 +444,8 @@ program key sec = do
       >>= addEventListener "click" (const $ resetSecret sec key)
 
   void $ menuElem >>= addEventListener "click" (switchSidebar tm)
+  void $ refreshElem >>= addEventListener "click" (const $ updateTree api)
+  void $ closeTermElem >>= addEventListener "click" (const $ hideTerm api)
 
   loadTree api
 
