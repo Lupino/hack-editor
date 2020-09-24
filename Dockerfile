@@ -25,12 +25,16 @@ ENV SHELL bash
 ENV LC_ALL=C
 
 RUN apt-get update && \
-    apt-get install -y curl wget python3 locales python3-pip git vim screen && \
+    apt-get install -y curl wget python3 locales python3-pip git vim screen xfonts-wqy && \
+    locale-gen zh_CN.UTF-8 && \
+    locale-gen en_US.UTF-8 && \
     pip3 install --upgrade pip numpy pandas matplotlib scipy scikit-learn && \
     mkdir -p /data && \
     mkdir -p /app/public && \
     ln -s /data/.vim/vimrc /root/.vimrc && \
     ln -s /data/.vim /root/.vim
+
+ENV LC_ALL=en_US.UTF-8
 
 COPY --from=0 /data/bin/* /usr/bin/
 COPY public /app/public
