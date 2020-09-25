@@ -269,7 +269,7 @@ showCurrentPath :: Bool -> FilePath -> Fay ()
 showCurrentPath isdir path = do
   setCurrentPath isdir path
   enableElem "download" $ not isdir
-  enableElem "downloadLink" $ not isdir
+  enableElem "share" $ not isdir
   enableElem "delete" $ not $ null path
   enableElem "run" $ canProc path
 
@@ -375,10 +375,10 @@ download :: ProcAPI -> Event -> Fay ()
 download api _ = do
   signCurrentPath api saveAs
 
-downloadLink :: ProcAPI -> Event -> Fay ()
-downloadLink api _ =
+shareLink :: ProcAPI -> Event -> Fay ()
+shareLink api _ =
   signCurrentPath api $ \_ url ->
-    prompt "下载地址" url $ const $ return ()
+    prompt "分享" url $ const $ return ()
 
 getKeyFromLocation :: Fay Text
 getKeyFromLocation = ffi "(function() {var m = /key=([^&]+)/.exec(location.search); return m && m [1] || '';})()"
@@ -448,8 +448,8 @@ program key sec = do
   void $ getElementById "download"
       >>= addEventListener "click" (download api)
 
-  void $ getElementById "downloadLink"
-      >>= addEventListener "click" (downloadLink api)
+  void $ getElementById "share"
+      >>= addEventListener "click" (shareLink api)
 
   void $ getElementById "resetSecret"
       >>= addEventListener "click" (const $ resetSecret sec key)
