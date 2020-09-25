@@ -79,7 +79,7 @@ body {
 }
 
 #terminal-container {
-  height: calc(100% + 10px);
+  height: 100%;
 }
 
 .hide {
@@ -94,6 +94,10 @@ body {
   bottom: 0;
   background-color: #ebebeb;
   z-index: 100;
+}
+
+#term {
+  background-color: black;
 }
 
 #term.debug {
