@@ -125,7 +125,7 @@ body {
   display: none;
 }
 
-#refresh, #close-term {
+#refresh, #close-term, #switch-debug {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -134,4 +134,8 @@ body {
   cursor: pointer;
   display: inline-block;
   z-index: 1000;
+}
+
+#switch-debug {
+  right: 35px;
 }

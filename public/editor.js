@@ -6519,6 +6519,9 @@ Main.refreshElem = new Fay$$$(function(){
 Main.closeTermElem = new Fay$$$(function(){
   return DOM.getElementById$36$uncurried("close-term");
 });
+Main.switchDebugElem = new Fay$$$(function(){
+  return DOM.getElementById$36$uncurried("switch-debug");
+});
 Main.setShow = function($p1){
   return new Fay$$$(function(){
     if (Fay$$_($p1) === true) {
@@ -6736,6 +6739,28 @@ Main.switchScreen = function($p1){
         });
       });
     };
+  };
+};
+Main.switchDebug = function($p1){
+  return function($p2){
+    return new Fay$$$(function(){
+      var tm = $p1;
+      return Fay$$bind$36$uncurried(Main.getScreenMode,function($p1){
+        var mode = $p1;
+        return (function($tmp1){
+          if (Fay$$_($tmp1) instanceof Main._TermMode) {
+            return Main.showTerm$36$uncurried(tm,true);
+          }
+          if (Fay$$_($tmp1) instanceof Main._DebugMode) {
+            return Main.showTerm$36$uncurried(tm,false);
+          }
+          if (Fay$$_($tmp1) instanceof Main._EditorMode) {
+            return Fay$$return$36$uncurried(Fay$$unit);
+          }
+          return (function(){ throw (["unhandled case",$tmp1]); })();
+        })(mode);
+      });
+    });
   };
 };
 Main.signCurrentPath = function($p1){

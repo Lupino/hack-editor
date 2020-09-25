@@ -214,6 +214,9 @@ refreshElem = getElementById "refresh"
 closeTermElem :: Fay Element
 closeTermElem = getElementById "close-term"
 
+switchDebugElem :: Fay Element
+switchDebugElem = getElementById "switch-debug"
+
 setShow :: Bool -> Element -> Fay ()
 setShow True  = flip removeClass "hide"
 setShow False = flip addClass "hide"
@@ -353,6 +356,14 @@ switchScreen tm api _ = do
     DebugMode  -> hideTerm api
     EditorMode -> showTerm tm False
 
+switchDebug :: TermManager -> Event -> Fay ()
+switchDebug tm _ = do
+  mode <- getScreenMode
+  case mode of
+    TermMode   -> showTerm tm True
+    DebugMode  -> showTerm tm False
+    EditorMode -> return ()
+
 signCurrentPath :: ProcAPI -> (Text -> Text -> Fay ()) -> Fay ()
 signCurrentPath api next = do
   currentPath <- getCurrentPath
@@ -446,6 +457,7 @@ program key sec = do
   void $ menuElem >>= addEventListener "click" (switchSidebar tm)
   void $ refreshElem >>= addEventListener "click" (const $ updateTree api)
   void $ closeTermElem >>= addEventListener "click" (const $ hideTerm api)
+  void $ switchDebugElem >>= addEventListener "click" (switchDebug tm)
 
   loadTree api
 
