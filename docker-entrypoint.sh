@@ -22,4 +22,8 @@ if [ -x "$DATA/bin/setup.sh" ]; then
     $DATA/bin/setup.sh
 fi
 
+if [ ! -f "$DATA/config.js" ]; then
+    cp /app/public/config.sample.js $DATA/config.js
+fi
+
 exec "$@" --source $DATA
