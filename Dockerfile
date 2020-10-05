@@ -25,23 +25,23 @@ ENV SHELL bash
 ENV LC_ALL=C
 
 RUN apt-get update && \
-    apt-get install -y curl wget python3 locales python3-pip git vim screen xfonts-wqy && \
+    apt-get install -y curl wget python3 locales python3-pip python3-venv git vim screen xfonts-wqy && \
     locale-gen zh_CN.UTF-8 && \
     locale-gen en_US.UTF-8 && \
-    pip3 install --upgrade pip numpy pandas matplotlib scipy scikit-learn && \
+    pip3 install --upgrade pip && \
     mkdir -p /data && \
-    mkdir -p /app/public && \
-    ln -s /data/.vim/vimrc /root/.vimrc && \
-    ln -s /data/.vim /root/.vim
+    mkdir -p /app/public
 
 ENV LC_ALL=en_US.UTF-8
 
 COPY --from=0 /data/bin/* /usr/bin/
 COPY public /app/public
 COPY source /data
+COPY docker-entrypoint.sh /usr/bin/
+RUN chmod +x /usr/bin/docker-entrypoint.sh
 
 WORKDIR /app
 
-ENTRYPOINT ["/usr/bin/hack-editor"]
+ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
 
-CMD ["--host", "0.0.0.0", "--port", "8000", "--source", "/data"]
+CMD ["/usr/bin/hack-editor", "--host", "0.0.0.0", "--port", "8000"]
