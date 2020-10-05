@@ -6168,18 +6168,16 @@ Utils.isTextFile = function($p1){
     return Fay$$jsToFay_bool(isTextFile(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
-Utils.canProc = new Fay$$$(function(){
-  return Regex.test(Regex.newRegex_$36$uncurried("\\.(js|sh|py)$",Fay$$list([Regex.I])));
-});
-Utils.isPy = new Fay$$$(function(){
-  return Regex.test(Regex.newRegex_$36$uncurried("\\.py$",Fay$$list([Regex.I])));
-});
-Utils.isJs = new Fay$$$(function(){
-  return Regex.test(Regex.newRegex_$36$uncurried("\\.js$",Fay$$list([Regex.I])));
-});
-Utils.isSh = new Fay$$$(function(){
-  return Regex.test(Regex.newRegex_$36$uncurried("\\.sh$",Fay$$list([Regex.I])));
-});
+Utils.isExecutable = function($p1){
+  return new Fay$$$(function(){
+    return Fay$$jsToFay_bool(isExecutable(Fay$$fayToJs(["user","FilePath",[]],$p1)));
+  });
+};
+Utils.getShell = function($p1){
+  return new Fay$$$(function(){
+    return Fay$$jsToFay(["user","FilePath",[]],getShell(Fay$$fayToJs(["user","FilePath",[]],$p1)));
+  });
+};
 Utils.modeMap = new Fay$$$(function(){
   return Fay$$list([Fay$$list(["javascript",Regex.newRegex_$36$uncurried("\\.js$",Fay$$list([Regex.I]))]),Fay$$list(["markdown",Regex.newRegex_$36$uncurried("\\.(md|markdown|rst)$",Fay$$list([Regex.I]))]),Fay$$list(["html",Regex.newRegex_$36$uncurried("\\.(html|htm)$",Fay$$list([Regex.I]))]),Fay$$list(["css",Regex.newRegex_$36$uncurried("\\.css$",Fay$$list([Regex.I]))]),Fay$$list(["yaml",Regex.newRegex_$36$uncurried("\\.(yaml|yml)$",Fay$$list([Regex.I]))]),Fay$$list(["xml",Regex.newRegex_$36$uncurried("\\.(svg|xml)$",Fay$$list([Regex.I]))]),Fay$$list(["json",Regex.newRegex_$36$uncurried("\\.json$",Fay$$list([Regex.I]))]),Fay$$list(["python",Regex.newRegex_$36$uncurried("\\.py$",Fay$$list([Regex.I]))]),Fay$$list(["tex",Regex.newRegex_$36$uncurried("\\.(tex|aux)$",Fay$$list([Regex.I]))]),Fay$$list(["sh",Regex.newRegex_$36$uncurried("\\.sh$",Fay$$list([Regex.I]))])]);
 });
@@ -6605,7 +6603,7 @@ Main.showCurrentPath = function($p1){
     return new Fay$$$(function(){
       var path = $p2;
       var isdir = $p1;
-      return Fay$$then$36$uncurried(Main.setCurrentPath$36$uncurried(isdir,path),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("download"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("share"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("delete"),Prelude.$36$$36$uncurried(Prelude.not,Data.Text.null$36$uncurried(path))),Prelude.$36$$36$uncurried(Main.enableElem("run"),Fay$$_(Utils.canProc)(path))))));
+      return Fay$$then$36$uncurried(Main.setCurrentPath$36$uncurried(isdir,path),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("download"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("share"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("delete"),Prelude.$36$$36$uncurried(Prelude.not,Data.Text.null$36$uncurried(path))),Prelude.$36$$36$uncurried(Main.enableElem("run"),Utils.isExecutable$36$uncurried(path))))));
     });
   };
 };
@@ -6666,7 +6664,7 @@ Main.runCurrentFile = function($p1){
           var currentPath = new Fay$$$(function(){
             return Data.Text.drop$36$uncurried(1,currentPath$39$);
           });
-          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried(Utils.getShell$36$uncurried(currentPath),Data.Text.$60$$62$$36$uncurried(" ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n")))));
         });
       })();
     });
@@ -6985,7 +6983,7 @@ Main.runCurrentFile$36$uncurried = function($p1){
           var currentPath = new Fay$$$(function(){
             return Data.Text.drop$36$uncurried(1,currentPath$39$);
           });
-          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Fay$$_(Fay$$_(Utils.isPy)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("python3 ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isJs)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("node ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : Fay$$_(Fay$$_(Utils.isSh)(currentPath)) ? Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("bash ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))) : TermManager.termSend$36$uncurried(tm,currentPath));
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried(Utils.getShell$36$uncurried(currentPath),Data.Text.$60$$62$$36$uncurried(" ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n")))));
         });
       })();
     });
@@ -7133,14 +7131,14 @@ Main.setDebug$36$uncurried = function($p1){
     throw ["unhandled case in setDebug",[$p1]];
   });
 };
-TermManager.termSend$36$uncurried = function($p1,$p2){
-  return new Fay$$$(function(){
-    return new Fay$$Monad(Fay$$jsToFay(["unknown"],Fay$$fayToJs(["user","TermManager",[]],$p1)['send'](Fay$$fayToJs(["user","Text",[]],$p2))));
-  });
-};
 Data.Text.$60$$62$$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
     return Fay$$jsToFay(["user","Text",[]],Fay$$fayToJs(["user","Text",[]],$p1) + Fay$$fayToJs(["user","Text",[]],$p2));
+  });
+};
+Utils.getShell$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    return Fay$$jsToFay(["user","FilePath",[]],getShell(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
 Data.Text.drop$36$uncurried = function($p1,$p2){
@@ -7216,7 +7214,7 @@ Main.showCurrentPath$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
     var path = $p2;
     var isdir = $p1;
-    return Fay$$then$36$uncurried(Main.setCurrentPath$36$uncurried(isdir,path),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("download"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("share"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("delete"),Prelude.$36$$36$uncurried(Prelude.not,Data.Text.null$36$uncurried(path))),Prelude.$36$$36$uncurried(Main.enableElem("run"),Fay$$_(Utils.canProc)(path))))));
+    return Fay$$then$36$uncurried(Main.setCurrentPath$36$uncurried(isdir,path),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("download"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("share"),Prelude.not$36$uncurried$36$uncurried$36$uncurried$36$uncurried$36$uncurried(isdir)),Fay$$then$36$uncurried(Prelude.$36$$36$uncurried(Main.enableElem("delete"),Prelude.$36$$36$uncurried(Prelude.not,Data.Text.null$36$uncurried(path))),Prelude.$36$$36$uncurried(Main.enableElem("run"),Utils.isExecutable$36$uncurried(path))))));
   });
 };
 Main.serverPath$36$uncurried = function($p1){
@@ -7229,6 +7227,11 @@ Main.setEditorData$36$uncurried = function($p1,$p2){
     var body = $p2;
     var mode = $p1;
     return Prelude.$36$$36$uncurried(Prelude.$_void,Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Fay$$bind$36$uncurried(Main.initEditor,ACEditor.removeAllEvent("change")),ACEditor.setValue(body)),ACEditor.setMode(mode)));
+  });
+};
+Utils.isExecutable$36$uncurried = function($p1){
+  return new Fay$$$(function(){
+    return Fay$$jsToFay_bool(isExecutable(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
 Data.Text.null$36$uncurried = function($p1){

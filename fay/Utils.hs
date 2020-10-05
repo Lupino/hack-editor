@@ -4,11 +4,9 @@
 module Utils
   ( isTextFile
   , getMode
-  , canProc
+  , isExecutable
   , isImage
-  , isPy
-  , isSh
-  , isJs
+  , getShell
   ) where
 
 import           Data.Text (Text, fromString)
@@ -20,17 +18,11 @@ import           Regex     (Flag (I), Regex, newRegex_, test)
 isTextFile :: FilePath -> Bool
 isTextFile = ffi "isTextFile(%1)"
 
-canProc :: FilePath -> Bool
-canProc = test (newRegex_ "\\.(js|sh|py)$" [I])
+isExecutable :: FilePath -> Bool
+isExecutable = ffi "isExecutable(%1)"
 
-isPy :: FilePath -> Bool
-isPy = test (newRegex_ "\\.py$" [I])
-
-isJs :: FilePath -> Bool
-isJs = test (newRegex_ "\\.js$" [I])
-
-isSh :: FilePath -> Bool
-isSh = test (newRegex_ "\\.sh$" [I])
+getShell :: FilePath -> FilePath
+getShell = ffi "getShell(%1)"
 
 modeMap :: [(Text, Regex)]
 modeMap = [ ("javascript", newRegex_ "\\.js$" [I]),

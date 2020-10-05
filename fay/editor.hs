@@ -19,7 +19,7 @@ import qualified ProcAPI     as API (readFile, removeFile, uploadFile,
                                      writeFile)
 import           TermManager (TermManager, closeTerm, newTermManager, openTerm,
                               termSend)
-import           Utils       (canProc, getMode, isImage, isJs, isPy, isSh,
+import           Utils       (getMode, getShell, isExecutable, isImage,
                               isTextFile)
 
 
@@ -271,7 +271,7 @@ showCurrentPath isdir path = do
   enableElem "download" $ not isdir
   enableElem "share" $ not isdir
   enableElem "delete" $ not $ null path
-  enableElem "run" $ canProc path
+  enableElem "run" $ isExecutable path
 
 cleanScreen :: Text -> Fay ()
 cleanScreen e = do
@@ -310,10 +310,7 @@ runCurrentFile tm = do
   currentPath' <- getCurrentPath
   let currentPath = drop 1 currentPath'
   showTerm tm True
-  if isPy currentPath then termSend tm $ "python3 " <> currentPath <> "\n"
-  else if isJs currentPath then termSend tm $ "node " <> currentPath <> "\n"
-  else if isSh currentPath then termSend tm $ "bash " <> currentPath <> "\n"
-  else termSend tm currentPath
+  termSend tm $ getShell currentPath <> " " <> currentPath <> "\n"
 
 setDebug :: Bool -> Fay ()
 setDebug False = do
