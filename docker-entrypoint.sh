@@ -10,7 +10,7 @@ fi
 echo "Using '$DATA' as data directory"
 
 if [ -f "$DATA/bin/activate" ]; then
-    source $DATA/bin/activate
+    . $DATA/bin/activate
 fi
 
 if [ -d "$DATA/.vim" ]; then
