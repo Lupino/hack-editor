@@ -35,7 +35,10 @@ RUN apt-get update && \
 ENV LC_ALL=en_US.UTF-8
 
 COPY --from=0 /data/bin/* /usr/bin/
-COPY public /app/public
+COPY public/js /app/public/js
+COPY public/css /app/public/css
+COPY public/fonts /app/public/fonts
+COPY public/index.html /app/public/index.html
 COPY source /data
 COPY docker-entrypoint.sh /usr/bin/
 RUN chmod +x /usr/bin/docker-entrypoint.sh
