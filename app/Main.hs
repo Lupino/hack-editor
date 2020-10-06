@@ -139,7 +139,7 @@ application tm gen procRoot workRoot = do
     resultOK
 
   where staticMid = staticPolicy (addBase $ procRoot </> "public")
-        staticMid' = staticPolicy (addBase workRoot)
+        staticMid' = staticPolicy (addBase $ workRoot </> "public")
         resultOK = json $ object [ "result" .= ("OK" :: String) ]
 
 filePath :: FilePath -> ActionM FilePath

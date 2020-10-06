@@ -116,6 +116,9 @@ class ProcApi extends Gateway {
   }
 
   async signFilePath(fileName) {
+    if (fileName.startsWith('/public')) {
+      return this.host + fileName.substr(7) + '?key='+this.key;
+    }
     const pathname = `/api/file${fileName}`;
     const path = await this.signPathName('GET', pathname);
     return this.host + path;
