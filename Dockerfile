@@ -40,8 +40,8 @@ COPY public/css /app/public/css
 COPY public/fonts /app/public/fonts
 COPY public/index.html /app/public/index.html
 COPY source /data
-COPY docker-entrypoint.sh /usr/bin/
-RUN chmod +x /usr/bin/docker-entrypoint.sh
+COPY bin/docker-entrypoint.sh /usr/bin/
+COPY bin/run /usr/bin/
 
 WORKDIR /app
 

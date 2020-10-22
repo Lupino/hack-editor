@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+PREV=$(pwd)
+ROOT=$(dirname $(cd $(dirname $0); pwd))
+
+SHELL=$1
+FILE=$2
+
+[ -z "$SHELL" ] && exit 1
+
+if [ -z "$FILE" ]; then
+  $ROOT/$SHELL
+else
+  DIRNAME=$(dirname $FILE)
+  FILENAME=$(basename $FILE)
+  cd $ROOT/$DIRNAME
+  $SHELL $FILENAME
+  cd $PREV
+fi
