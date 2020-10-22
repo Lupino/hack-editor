@@ -149,7 +149,7 @@ filePath root = do
 
 textRoute :: [T.Text] -> RoutePattern
 textRoute strs = function $ \req ->
-  if isPrefixOf strs (pathInfo req) then
+  if  strs `isPrefixOf` pathInfo req then
     Just [("path", TL.pack $ foldr ((</>) . T.unpack) "" (drop 2 $ pathInfo req))]
   else Nothing
 
