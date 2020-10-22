@@ -3,18 +3,18 @@ function isTextFile(fileName) {
 }
 
 function isExecutable(fileName) {
-  return /\.(js|sh|py)$/i.test(fileName);
+  return /\.(js|sh|py)$/i.test(fileName) || fileName.startsWith('/bin/');
 }
 
 function getShell(fileName) {
   if (/\.py/.test(fileName)) {
-    return 'python3'
+    return 'run python3'
   }
   if (/\.js/.test(fileName)) {
-    return 'node'
+    return 'run node'
   }
   if (/\.sh/.test(fileName)) {
-    return 'bash'
+    return 'run bash'
   }
-  return '';
+  return 'run';
 }
