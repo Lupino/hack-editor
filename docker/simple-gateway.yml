@@ -1,0 +1,22 @@
+host: 0.0.0.0
+port: 3000
+connPool: 1000
+connTimeout: 300
+
+appList:
+- key: 78fffcd9881d9783ea20
+  secret: b3191487326ce2b28423eb97573073021716c57193212dc06961d73793ef3533
+  secure: true
+  proxy: false
+  baseUrl: http://hack-editor:8000
+  wsUrl: ws://hack-editor:8000
+  replacePages:
+  - /index.html
+  - /css/uikit.min.css
+  - /css/jstree/themes/default/style.min.css
+  - /js/ace/ace.js
+  replaceName: __KEY__
+  allowPages:
+  - /
+  denyPages:
+  - /api/
