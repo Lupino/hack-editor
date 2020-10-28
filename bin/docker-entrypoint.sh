@@ -27,4 +27,8 @@ if [ ! -f "$DATA/public/js/config.js" ]; then
     cp /app/public/js/config.sample.js $DATA/public/js/config.js
 fi
 
-exec "$@" --source $DATA
+if [ "$1" = "hack-editor" ]; then
+    exec "$@" --source $DATA
+else
+    exec "$@"
+fi
