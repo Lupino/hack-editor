@@ -19,8 +19,7 @@ import qualified ProcAPI     as API (readFile, removeFile, uploadFile,
                                      writeFile)
 import           TermManager (TermManager, closeTerm, newTermManager, openTerm,
                               termSend)
-import           Utils       (getMode, getShell, isExecutable, isImage,
-                              isTextFile)
+import           Utils       (getMode, isExecutable, isImage, isTextFile)
 
 
 data SaveState = Saved | Saving | Unsave
@@ -310,7 +309,7 @@ runCurrentFile tm = do
   currentPath' <- getCurrentPath
   let currentPath = drop 1 currentPath'
   showTerm tm True
-  termSend tm $ getShell currentPath <> " " <> currentPath <> "\n"
+  termSend tm $ "run " <> currentPath <> "\n"
 
 setDebug :: Bool -> Fay ()
 setDebug False = do

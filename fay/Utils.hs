@@ -6,7 +6,6 @@ module Utils
   , getMode
   , isExecutable
   , isImage
-  , getShell
   ) where
 
 import           Data.Text (Text, fromString)
@@ -20,9 +19,6 @@ isTextFile = ffi "isTextFile(%1)"
 
 isExecutable :: FilePath -> Bool
 isExecutable = ffi "isExecutable(%1)"
-
-getShell :: FilePath -> FilePath
-getShell = ffi "getShell(%1)"
 
 modeMap :: [(Text, Regex)]
 modeMap = [ ("javascript", newRegex_ "\\.js$" [I]),

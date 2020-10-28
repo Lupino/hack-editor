@@ -6173,11 +6173,6 @@ Utils.isExecutable = function($p1){
     return Fay$$jsToFay_bool(isExecutable(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
-Utils.getShell = function($p1){
-  return new Fay$$$(function(){
-    return Fay$$jsToFay(["user","FilePath",[]],getShell(Fay$$fayToJs(["user","FilePath",[]],$p1)));
-  });
-};
 Utils.modeMap = new Fay$$$(function(){
   return Fay$$list([Fay$$list(["javascript",Regex.newRegex_$36$uncurried("\\.js$",Fay$$list([Regex.I]))]),Fay$$list(["markdown",Regex.newRegex_$36$uncurried("\\.(md|markdown|rst)$",Fay$$list([Regex.I]))]),Fay$$list(["html",Regex.newRegex_$36$uncurried("\\.(html|htm)$",Fay$$list([Regex.I]))]),Fay$$list(["css",Regex.newRegex_$36$uncurried("\\.css$",Fay$$list([Regex.I]))]),Fay$$list(["yaml",Regex.newRegex_$36$uncurried("\\.(yaml|yml)$",Fay$$list([Regex.I]))]),Fay$$list(["xml",Regex.newRegex_$36$uncurried("\\.(svg|xml)$",Fay$$list([Regex.I]))]),Fay$$list(["json",Regex.newRegex_$36$uncurried("\\.json$",Fay$$list([Regex.I]))]),Fay$$list(["python",Regex.newRegex_$36$uncurried("\\.py$",Fay$$list([Regex.I]))]),Fay$$list(["tex",Regex.newRegex_$36$uncurried("\\.(tex|aux)$",Fay$$list([Regex.I]))]),Fay$$list(["sh",Regex.newRegex_$36$uncurried("\\.sh$",Fay$$list([Regex.I]))])]);
 });
@@ -6664,7 +6659,7 @@ Main.runCurrentFile = function($p1){
           var currentPath = new Fay$$$(function(){
             return Data.Text.drop$36$uncurried(1,currentPath$39$);
           });
-          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried(Utils.getShell$36$uncurried(currentPath),Data.Text.$60$$62$$36$uncurried(" ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n")))));
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("run ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))));
         });
       })();
     });
@@ -6983,7 +6978,7 @@ Main.runCurrentFile$36$uncurried = function($p1){
           var currentPath = new Fay$$$(function(){
             return Data.Text.drop$36$uncurried(1,currentPath$39$);
           });
-          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried(Utils.getShell$36$uncurried(currentPath),Data.Text.$60$$62$$36$uncurried(" ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n")))));
+          return Fay$$then$36$uncurried(Main.showTerm$36$uncurried(tm,true),Prelude.$36$$36$uncurried(TermManager.termSend(tm),Data.Text.$60$$62$$36$uncurried("run ",Data.Text.$60$$62$$36$uncurried(currentPath,"\n"))));
         });
       })();
     });
@@ -7134,11 +7129,6 @@ Main.setDebug$36$uncurried = function($p1){
 Data.Text.$60$$62$$36$uncurried = function($p1,$p2){
   return new Fay$$$(function(){
     return Fay$$jsToFay(["user","Text",[]],Fay$$fayToJs(["user","Text",[]],$p1) + Fay$$fayToJs(["user","Text",[]],$p2));
-  });
-};
-Utils.getShell$36$uncurried = function($p1){
-  return new Fay$$$(function(){
-    return Fay$$jsToFay(["user","FilePath",[]],getShell(Fay$$fayToJs(["user","FilePath",[]],$p1)));
   });
 };
 Data.Text.drop$36$uncurried = function($p1,$p2){

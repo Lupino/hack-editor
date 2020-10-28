@@ -1,19 +1,41 @@
 #!/usr/bin/env bash
 
-PREV=$(pwd)
-ROOT=$(dirname $(cd $(dirname $0); pwd))
-
-SHELL=$1
-FILE=$2
-
-[ -z "$SHELL" ] && exit 1
-
-if [ -z "$FILE" ]; then
-  $ROOT/$SHELL
+if [ ! -z "$EDITOR_DATA" ]; then
+    ROOT="$EDITOR_DATA"
 else
-  DIRNAME=$(dirname $FILE)
-  FILENAME=$(basename $FILE)
-  cd $ROOT/$DIRNAME
-  $SHELL $FILENAME
-  cd $PREV
+    ROOT="/data"
+fi
+
+PREV=$(pwd)
+FILE=$1
+
+run_file() {
+    DIRNAME=$(dirname ${FILE})
+    FILENAME=$(basename ${FILE})
+    cd ${ROOT}/${DIRNAME}
+    $1 ${FILENAME}
+    cd ${PREV}
+}
+
+run_file_cmd() {
+    DIRNAME=$(dirname ${FILE})
+    FILENAME=$(basename ${FILE})
+    cd ${ROOT}/${DIRNAME}
+    chmod +x ./${FILENAME}
+    if [ -x ${FILENAME} ]; then
+        ./${FILENAME}
+    else
+        sh ${FILENAME}
+    fi
+    cd ${PREV}
+}
+
+if [ "${FILE##*.}" = "py" ]; then
+    PYTHON=python3
+    ${PYTHON} -c 'print()' >/dev/null 2>/dev/null || PYTHON=python
+    run_file ${PYTHON}
+elif [ "${FILE##*.}" = "js" ]; then
+    run_file node
+else
+    run_file_cmd
 fi
