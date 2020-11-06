@@ -9,8 +9,8 @@ fi
 
 echo "Using '$DATA' as data directory"
 
-if [ -f "$DATA/bin/activate" ]; then
-    . $DATA/bin/activate
+if [ -f "$DATA/.editorrc" ]; then
+    . $DATA/.editorrc
 fi
 
 if [ -d "$DATA/.vim" ]; then
