@@ -47,4 +47,4 @@ WORKDIR /app
 
 ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
 
-CMD ["/usr/bin/hack-editor", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["hack-editor", "--host", "0.0.0.0", "--port", "8000"]
